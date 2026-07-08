@@ -51,6 +51,7 @@ PanelWindow {
     property bool networkPopupOpen: false
     property bool clockPopupOpen: false
     property bool powerPopupOpen: false
+    property string networkPopupMode: "active"
     property var bluetoothNameMap: ({})
     property var audioOutputDevices: []
     property bool audioOutputScanInSinks: false
@@ -206,6 +207,32 @@ PanelWindow {
         return null;
     }
 
+    function networkDeviceByType(type) {
+        var devices = Networking.devices.values;
+        var fallback = null;
+
+        for (var i = 0; i < devices.length; i++) {
+            if (devices[i].type !== type) continue;
+            if (devices[i].connected) return devices[i];
+            if (!fallback) fallback = devices[i];
+        }
+
+        return fallback;
+    }
+
+    function networkPopupDevice() {
+        if (networkPopupMode === "wifi") return networkDeviceByType(DeviceType.Wifi);
+        if (networkPopupMode === "wired") return networkDeviceByType(DeviceType.Wired);
+        return activeNetworkDevice();
+    }
+
+    function networkIconForDevice(device) {
+        if (!device || !device.connected) return "";
+        if (device.type === DeviceType.Wifi) return "";
+        if (device.type === DeviceType.Wired) return "";
+        return "";
+    }
+
     function connectedWifiNetwork(device) {
         if (!device || device.type !== DeviceType.Wifi) return null;
 
@@ -240,11 +267,41 @@ PanelWindow {
         return Math.round(wifi.signalStrength) + "%";
     }
 
-    function activeNetworkInterface() {
-        var devices = Networking.devices.values;
-        for (var i = 0; i < devices.length; i++) {
-            if (devices[i].connected) return devices[i].name || "";
+    function wifiNetworksForDevice(device) {
+        if (!device || device.type !== DeviceType.Wifi) return [];
+
+        var networks = device.networks.values.slice();
+        networks.sort(function(a, b) {
+            if (a.connected !== b.connected) return a.connected ? -1 : 1;
+            return b.signalStrength - a.signalStrength;
+        });
+
+        return networks;
+    }
+
+    function wifiNetworkStatusText(network) {
+        if (network.connected) return "connected";
+        if (network.stateChanging) return "connecting";
+        if (network.known) return "known";
+        return network.security === WifiSecurityType.Open ? "open" : "secured";
+    }
+
+    function wifiNetworkLockIcon(network) {
+        if (network.security === WifiSecurityType.Open) return "";
+        return "";
+    }
+
+    function connectWifiNetwork(network) {
+        if (!network || network.connected || network.stateChanging) return;
+
+        if (network.known || network.security === WifiSecurityType.Open) {
+            network.connect();
         }
+    }
+
+    function activeNetworkInterface() {
+        var selected = networkPopupOpen ? networkPopupDevice() : activeNetworkDevice();
+        if (selected && selected.connected) return selected.name || "";
 
         return "";
     }
@@ -877,7 +934,13 @@ PanelWindow {
                         }
 
                         networkPopupOpen = !networkPopupOpen;
-                        if (networkPopupOpen) updateNetworkIp();
+                        if (networkPopupOpen) {
+                            var active = activeNetworkDevice();
+                            networkPopupMode = active && active.type === DeviceType.Wifi ? "wifi" : "wired";
+                            var wifiDevice = networkDeviceByType(DeviceType.Wifi);
+                            if (networkPopupMode === "wifi" && wifiDevice) wifiDevice.scannerEnabled = true;
+                            updateNetworkIp();
+                        }
                     }
                 }
             }
@@ -1583,7 +1646,7 @@ PanelWindow {
 
             Column {
                 id: networkPopupColumn
-                property var device: activeNetworkDevice()
+                property var device: networkPopupDevice()
 
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -1597,7 +1660,7 @@ PanelWindow {
                     spacing: 8
 
                     Text {
-                        text: networkIconText()
+                        text: networkIconForDevice(networkPopupColumn.device)
                         color: networkTextColor
                         font.family: iconFont
                         font.pixelSize: 18
@@ -1627,6 +1690,66 @@ PanelWindow {
                             color: networkTextColor
                             font.family: barFont
                             font.pixelSize: 13
+                        }
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#18ffffff"
+                }
+
+                RowLayout {
+                    width: parent.width
+                    height: 30
+                    spacing: 8
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 30
+                        radius: 15
+                        color: networkPopupMode === "wired" ? activePillColor : pillColor
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: " Wired"
+                            color: networkPopupMode === "wired" ? textColor : networkTextColor
+                            font.family: barFont
+                            font.pixelSize: 13
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                networkPopupMode = "wired";
+                                updateNetworkIp();
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 30
+                        radius: 15
+                        color: networkPopupMode === "wifi" ? activePillColor : pillColor
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: " WiFi"
+                            color: networkPopupMode === "wifi" ? textColor : networkTextColor
+                            font.family: barFont
+                            font.pixelSize: 13
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                networkPopupMode = "wifi";
+                                var wifiDevice = networkDeviceByType(DeviceType.Wifi);
+                                if (wifiDevice) wifiDevice.scannerEnabled = true;
+                                updateNetworkIp();
+                            }
                         }
                     }
                 }
@@ -1677,7 +1800,7 @@ PanelWindow {
                     }
 
                     Text {
-                        text: networkIpText || "No IP"
+                        text: networkPopupColumn.device && networkPopupColumn.device.connected ? networkIpText || "No IP" : "Disconnected"
                         color: networkTextColor
                         font.family: barFont
                         font.pixelSize: 13
@@ -1725,6 +1848,151 @@ PanelWindow {
                         Layout.preferredWidth: 42
                         horizontalAlignment: Text.AlignRight
                         Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+
+                Column {
+                    width: parent.width
+                    spacing: 8
+                    visible: networkPopupMode === "wifi"
+
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: "#18ffffff"
+                    }
+
+                    RowLayout {
+                        width: parent.width
+                        height: 26
+                        spacing: 8
+
+                        Text {
+                            text: "Networks"
+                            color: mutedTextColor
+                            font.family: barFont
+                            font.pixelSize: 13
+                            Layout.fillWidth: true
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+
+                        Rectangle {
+                            Layout.preferredWidth: wifiScanLabel.implicitWidth + 18
+                            Layout.preferredHeight: 26
+                            radius: 13
+                            color: networkPopupColumn.device && networkPopupColumn.device.scannerEnabled ? activePillColor : pillColor
+
+                            Text {
+                                id: wifiScanLabel
+                                anchors.centerIn: parent
+                                text: networkPopupColumn.device && networkPopupColumn.device.scannerEnabled ? "scanning" : "scan"
+                                color: networkTextColor
+                                font.family: barFont
+                                font.pixelSize: 12
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                onClicked: {
+                                    if (networkPopupColumn.device) {
+                                        networkPopupColumn.device.scannerEnabled = !networkPopupColumn.device.scannerEnabled;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Text {
+                        width: parent.width
+                        visible: !networkPopupColumn.device || networkPopupColumn.device.type !== DeviceType.Wifi
+                        text: "No WiFi device"
+                        color: mutedTextColor
+                        font.family: barFont
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text {
+                        width: parent.width
+                        visible: networkPopupColumn.device
+                            && networkPopupColumn.device.type === DeviceType.Wifi
+                            && wifiNetworksForDevice(networkPopupColumn.device).length === 0
+                        text: networkPopupColumn.device.scannerEnabled ? "Scanning..." : "No networks found"
+                        color: mutedTextColor
+                        font.family: barFont
+                        font.pixelSize: 13
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Repeater {
+                        model: wifiNetworksForDevice(networkPopupColumn.device)
+
+                        Rectangle {
+                            width: networkPopupColumn.width
+                            height: 34
+                            radius: 17
+                            color: modelData.connected ? activePillColor : networkMouse.containsMouse ? "#4a282828" : pillColor
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
+                                spacing: 8
+
+                                Text {
+                                    text: modelData.connected ? "" : ""
+                                    color: networkTextColor
+                                    font.family: iconFont
+                                    font.pixelSize: 14
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: modelData.name || "Hidden network"
+                                    color: textColor
+                                    font.family: barFont
+                                    font.pixelSize: 13
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: wifiNetworkLockIcon(modelData)
+                                    color: mutedTextColor
+                                    font.family: iconFont
+                                    font.pixelSize: 12
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: Math.round(modelData.signalStrength) + "%"
+                                    color: networkTextColor
+                                    font.family: barFont
+                                    font.pixelSize: 12
+                                    Layout.preferredWidth: 40
+                                    horizontalAlignment: Text.AlignRight
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: wifiNetworkStatusText(modelData)
+                                    color: mutedTextColor
+                                    font.family: barFont
+                                    font.pixelSize: 12
+                                    Layout.preferredWidth: 72
+                                    horizontalAlignment: Text.AlignRight
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                            }
+
+                            MouseArea {
+                                id: networkMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: connectWifiNetwork(modelData)
+                            }
+                        }
                     }
                 }
             }
