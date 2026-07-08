@@ -1,0 +1,174 @@
+* {
+    text-shadow: none;
+}
+
+@import "css/archlogo.css";
+
+window#waybar {
+    /* Large size for shorter side padding*/
+    /* border-radius: 40px */
+    background-color: transparent;
+}
+
+.modules-left {
+    padding: 0 8px;
+}
+
+.modules-center {
+    padding: 0 8px;
+}
+
+.modules-right {
+    padding: 0 8px;
+}
+
+tooltip {
+    background-color: rgba(18, 18, 18, 1.0);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 15px;
+
+    font-family: "Inconsolata SemiBold", "Symbols Nerd Font";
+    font-size: 16px;
+}
+
+#bluetooth,
+#bluetooth.disabled,
+#bluetooth.off,
+#bluetooth.on,
+#bluetooth.connected,
+#bluetooth.discoverable,
+#bluetooth.discovering,
+#bluetooth.pairable,
+#bluetooth.no-controller{
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding: 0px 10px 0px 10px;
+    background-color: rgba(40, 40, 40, 0.2);
+
+    color: #f6a4fe;
+
+    border-radius: 40px;
+
+    font-family: "Inconsolata SemiBold", "Symbols Nerd Font";
+    font-size: 16px;
+
+}
+
+#clock,
+#cpu,
+#memory,
+#network,
+#pulseaudio{
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding: 0px 10px 0px 10px;
+    background-color: rgba(40, 40, 40, 0.2);
+
+    border-radius: 40px;
+
+    font-family: "Inconsolata SemiBold", "Symbols Nerd Font";
+    font-size: 16px;
+}
+
+#workspaces {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding: 0px 5px 0px 5px;
+    background-color: transparent;
+
+    font-family: "Inconsolata SemiBold", "Symbols Nerd Font";
+    font-size: 16px;
+}
+
+#workspaces {
+    /* border: rgba(255, 255, 255, 0.2) solid 2px; */
+    padding: 4px 12px;
+
+    border-radius: 40px;
+    padding: 0px 5px 0px 5px;
+    background-color: rgba(18, 18, 18, 0.2);
+    transition-property: background, color, border;
+    transition-duration: 0.2s;
+}
+
+#workspaces button {
+    border: none;
+    border-radius: 40px;
+    padding: 0px 0px;
+    background: transparent;
+    color: #ffffff;
+    margin: 0 4px;
+    min-width: 24px;
+
+    padding: 0px 5px 0px 5px;
+    transition-property: background, color, border, margin, padding;
+    transition-duration: 0.2s;
+}
+
+#workspaces button:hover {
+    border-radius: 40px;
+    padding: 0px 5px 0px 5px;
+    background-color: rgba(18, 18, 18, 0.15);
+    /* background: rgba(255, 255, 255, 0.5); */
+    color: rgba(255, 255, 255, 0.5);
+}
+
+#workspaces button.empty {
+    padding: 0px 5px 0px 5px;
+    color: rgba(255, 255, 255, 0.25);
+}
+
+#workspaces button.active {
+    padding: 0px 5px 0px 5px;
+    border-radius: 40px;
+    background-color: rgba(18, 18, 18, 0.6);
+    /* background: #ffffff; */
+    color: #ffffff;
+    margin-bottom: 1px;
+    /* padding: 0 4px; */
+}
+
+#workspaces button.urgent {
+    border-radius: 40px;
+    padding: 0px 5px 0px 5px;
+    background-color: #eb4d4b;
+    color: #ffffff;
+    /*border-bottom: 5px hollow #eb4d4b;*/
+}
+
+#clock {
+    color: #eefff1;
+}
+
+#cpu {
+    color: #FE968B;
+}
+
+#memory {
+    color: #FFEAAA;
+}
+
+#pulseaudio {
+    color: #a4e4fe;
+}
+
+#network {
+    color: #b0f5e5;
+}
+
+#tray {
+    padding: 0px 10px 0px 10px;
+    /* border: rgba(255, 255, 255, 0.2) solid 2px; */
+    color: #a4aafe;
+    border-radius: 40px;
+    background-color: rgba(18, 18, 18, 0.2);
+}
+
+#window {
+    padding: 0px 15px 0px 15px;
+    background-color: rgba(18, 18, 18, 0.2);
+    border-radius: 40px;
+    color: #e6f2d6;
+    margin-left: 4px;
+    margin-right: 4px;
+}
