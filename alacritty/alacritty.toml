@@ -1,0 +1,13 @@
+[general]
+import = [
+    "~/.config/alacritty/conf.d/env.toml",
+    "~/.config/alacritty/conf.d/font.toml",
+    "~/.config/alacritty/conf.d/cursor.toml",
+    "~/.config/alacritty/conf.d/keyboard.toml",
+    "~/.config/alacritty/conf.d/terminal.toml",
+    "~/.config/alacritty/conf.d/window.toml",
+]
+
+# Color themes:
+# "~/.config/alacritty/base16_default_dark.toml"
+# "~/.config/alacritty/citylights.toml"
