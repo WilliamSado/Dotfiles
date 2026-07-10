@@ -33,6 +33,35 @@ PanelWindow {
         onLoaded: applyStoredSettings()
     }
 
+    IpcHandler {
+        target: "control"
+
+        function openLauncher(): string {
+            barWindow.openLauncher();
+            return "launcher";
+        }
+
+        function openCapture(): string {
+            barWindow.openCapturePanel();
+            return "capture";
+        }
+
+        function openSettings(): string {
+            barWindow.openHyprSettings();
+            return "settings";
+        }
+
+        function openClipboard(): string {
+            barWindow.openClipboardPanel();
+            return "clipboard";
+        }
+
+        function openWindows(): string {
+            barWindow.openWindowSwitcher();
+            return "windows";
+        }
+    }
+
     property alias barTopMargin: numbers.barTopMargin
     property alias barSideMargin: numbers.barSideMargin
     property alias pillHeight: numbers.pillHeight
