@@ -192,64 +192,6 @@ PanelWindow {
         || clipboardOpen
         || captureOpen
         || windowSwitcherOpen
-    readonly property bool clickAwayOpen: false
-    readonly property int clickAwayHoleX: bluetoothPopupOpen ? bluetoothPopup.relativeX
-        : powerPopupOpen ? powerPopup.relativeX
-        : volumePopupOpen ? volumePopup.relativeX
-        : networkPopupOpen ? networkPopup.relativeX
-        : clockPopupOpen ? clockPopup.relativeX
-        : performancePopupOpen ? performancePopup.relativeX
-        : notificationCenterOpen ? notificationCenter.relativeX
-        : launcherOpen ? launcherPanel.relativeX
-        : clipboardOpen ? clipboardPanel.relativeX
-        : captureOpen ? capturePanel.relativeX
-        : windowSwitcherOpen ? windowSwitcherPanel.relativeX
-        : hyprSettingsOpen ? hyprSettingsPopup.relativeX
-        : quickSettingsOpen ? quickSettingsWindow.relativeX
-        : 0
-    readonly property int clickAwayHoleY: (bluetoothPopupOpen ? bluetoothPopup.relativeY
-        : powerPopupOpen ? powerPopup.relativeY
-        : volumePopupOpen ? volumePopup.relativeY
-        : networkPopupOpen ? networkPopup.relativeY
-        : clockPopupOpen ? clockPopup.relativeY
-        : performancePopupOpen ? performancePopup.relativeY
-        : notificationCenterOpen ? notificationCenter.relativeY
-        : launcherOpen ? launcherPanel.relativeY
-        : clipboardOpen ? clipboardPanel.relativeY
-        : captureOpen ? capturePanel.relativeY
-        : windowSwitcherOpen ? windowSwitcherPanel.relativeY
-        : hyprSettingsOpen ? hyprSettingsPopup.relativeY
-        : quickSettingsOpen ? quickSettingsWindow.relativeY
-        : barWindow.implicitHeight) - barWindow.implicitHeight
-    readonly property int clickAwayHoleWidth: bluetoothPopupOpen ? bluetoothPopup.implicitWidth
-        : powerPopupOpen ? powerPopup.implicitWidth
-        : volumePopupOpen ? volumePopup.implicitWidth
-        : networkPopupOpen ? networkPopup.implicitWidth
-        : clockPopupOpen ? clockPopup.implicitWidth
-        : performancePopupOpen ? performancePopup.implicitWidth
-        : notificationCenterOpen ? notificationCenter.implicitWidth
-        : launcherOpen ? launcherPanel.implicitWidth
-        : clipboardOpen ? clipboardPanel.implicitWidth
-        : captureOpen ? capturePanel.implicitWidth
-        : windowSwitcherOpen ? windowSwitcherPanel.implicitWidth
-        : hyprSettingsOpen ? hyprSettingsPopup.implicitWidth
-        : quickSettingsOpen ? quickSettingsWindow.implicitWidth
-        : 0
-    readonly property int clickAwayHoleHeight: bluetoothPopupOpen ? bluetoothPopup.implicitHeight
-        : powerPopupOpen ? powerPopup.implicitHeight
-        : volumePopupOpen ? volumePopup.implicitHeight
-        : networkPopupOpen ? networkPopup.implicitHeight
-        : clockPopupOpen ? clockPopup.implicitHeight
-        : performancePopupOpen ? performancePopup.implicitHeight
-        : notificationCenterOpen ? notificationCenter.implicitHeight
-        : launcherOpen ? launcherPanel.implicitHeight
-        : clipboardOpen ? clipboardPanel.implicitHeight
-        : captureOpen ? capturePanel.implicitHeight
-        : windowSwitcherOpen ? windowSwitcherPanel.implicitHeight
-        : hyprSettingsOpen ? hyprSettingsPopup.implicitHeight
-        : quickSettingsOpen ? quickSettingsWindow.implicitHeight
-        : 0
-
     onBluetoothPopupOpenChanged: {
         if (bluetoothPopupOpen) {
             bluetoothPopupClosing = false;
@@ -547,10 +489,6 @@ PanelWindow {
         if (name !== "windowSwitcher") closeWindowSwitcher();
         if (name !== "hyprSettings") closeHyprSettings();
         if (name !== "quickSettings") closeQuickSettings();
-    }
-
-    function closeAllPopups() {
-        closePopupsExcept("");
     }
 
     function volumeIconText() {
@@ -2444,40 +2382,6 @@ PanelWindow {
                     }
                 }
             }
-        }
-    }
-
-    PopupWindow {
-        id: popupClickAwayLayer
-        parentWindow: barWindow
-        visible: clickAwayOpen
-        implicitWidth: barWindow.screen ? barWindow.screen.width : barWindow.width
-        implicitHeight: barWindow.screen ? Math.max(1, barWindow.screen.height - barWindow.implicitHeight) : 720
-        relativeX: 0
-        relativeY: barWindow.implicitHeight
-        color: "transparent"
-        grabFocus: false
-        mask: Region {
-            Region {
-                x: 0
-                y: 0
-                width: popupClickAwayLayer.width
-                height: popupClickAwayLayer.height
-            }
-
-            Region {
-                intersection: Intersection.Subtract
-                x: clickAwayHoleX
-                y: clickAwayHoleY
-                width: clickAwayHoleWidth
-                height: clickAwayHoleHeight
-            }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-            onClicked: closeAllPopups()
         }
     }
 
