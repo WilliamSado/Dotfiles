@@ -1,11 +1,17 @@
 import Quickshell
+import Quickshell.Bluetooth
+import Quickshell.Networking
 import QtQuick
 import QtQuick.Layouts
+import "config" as Config
 
 Item {
     id: root
 
     required property var bar
+    property string activeTab: "display"
+
+    Config.ThemePresets { id: themePresets }
 
     readonly property int relativeX: popup.relativeX
     readonly property int relativeY: popup.relativeY
@@ -13,7 +19,24 @@ Item {
     implicitHeight: popup.implicitHeight
 
     function focusWallpaperInput() {
+        if (activeTab !== "theme") return;
         wallpaperInput.forceActiveFocus();
+    }
+
+    function openTab(tab) {
+        activeTab = tab;
+        if (tab === "display") {
+            root.bar.refreshHyprMonitors();
+        } else if (tab === "wifi") {
+            var wifiDevice = root.bar.networkDeviceByType(DeviceType.Wifi);
+            if (wifiDevice) wifiDevice.scannerEnabled = true;
+        } else if (tab === "bluetooth") {
+            root.bar.updateBluetoothNameMap();
+        } else if (tab === "theme") {
+            Qt.callLater(function() {
+                wallpaperInput.forceActiveFocus();
+            });
+        }
     }
 
     PopupWindow {
@@ -32,7 +55,7 @@ Item {
             if (visible) {
                 root.bar.refreshHyprMonitors();
                 Qt.callLater(function() {
-                    wallpaperInput.forceActiveFocus();
+                    root.focusWallpaperInput();
                 });
             }
         }
@@ -129,9 +152,66 @@ Item {
                     color: "#18ffffff"
                 }
 
+                RowLayout {
+                    width: parent.width
+                    height: 36
+                    spacing: 8
+
+                    Repeater {
+                        model: [
+                            { key: "wifi", icon: "", label: "WiFi" },
+                            { key: "bluetooth", icon: "", label: "Bluetooth" },
+                            { key: "display", icon: "󰍹", label: "Display" },
+                            { key: "theme", icon: "󰸉", label: "Theme" }
+                        ]
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 36
+                            radius: 18
+                            color: root.activeTab === modelData.key ? root.bar.activePillColor : tabMouse.containsMouse ? "#44282828" : root.bar.pillColor
+
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 7
+
+                                Text {
+                                    text: modelData.icon
+                                    color: root.activeTab === modelData.key ? root.bar.textColor : root.bar.mutedTextColor
+                                    font.family: root.bar.iconFont
+                                    font.pixelSize: 13
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: modelData.label
+                                    color: root.activeTab === modelData.key ? root.bar.textColor : root.bar.mutedTextColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            MouseArea {
+                                id: tabMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: root.openTab(modelData.key)
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#18ffffff"
+                }
+
                 Column {
                     width: parent.width
                     spacing: 8
+                    visible: root.activeTab === "theme"
 
                     Text {
                         text: "Wallpaper"
@@ -159,7 +239,7 @@ Item {
                                 anchors.leftMargin: 12
                                 anchors.rightMargin: 12
                                 text: root.bar.hyprWallpaperPath
-                                focus: root.bar.hyprSettingsOpen
+                                focus: root.bar.hyprSettingsOpen && root.activeTab === "theme"
                                 activeFocusOnPress: true
                                 color: root.bar.textColor
                                 selectionColor: root.bar.networkTextColor
@@ -208,17 +288,89 @@ Item {
                             }
                         }
                     }
+
+                    Text {
+                        text: "Accent"
+                        color: root.bar.mutedTextColor
+                        font.family: root.bar.barFont
+                        font.pixelSize: 13
+                    }
+
+                    Grid {
+                        width: parent.width
+                        columns: 3
+                        rowSpacing: 8
+                        columnSpacing: 8
+
+                        Repeater {
+                            model: themePresets.presets
+
+                            Rectangle {
+                                width: (parent.width - 16) / 3
+                                height: 58
+                                radius: 16
+                                color: themePresetMouse.containsMouse ? modelData.active : modelData.pill
+                                border.color: modelData.accent
+                                border.width: 1
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 10
+                                    anchors.rightMargin: 10
+                                    spacing: 8
+
+                                    Row {
+                                        Layout.preferredWidth: 50
+                                        Layout.alignment: Qt.AlignVCenter
+                                        spacing: -6
+
+                                        Repeater {
+                                            model: [modelData.accent, modelData.accent2, modelData.bluetooth]
+
+                                            Rectangle {
+                                                width: 18
+                                                height: 18
+                                                radius: 9
+                                                color: modelData
+                                                border.color: "#44ffffff"
+                                                border.width: 1
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        text: modelData.name
+                                        color: modelData.text
+                                        font.family: root.bar.barFont
+                                        font.pixelSize: 12
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: themePresetMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: root.bar.applyThemePreset(modelData)
+                                }
+                            }
+                        }
+                    }
                 }
 
                 Rectangle {
                     width: parent.width
                     height: 1
                     color: "#18ffffff"
+                    visible: root.activeTab === "theme"
                 }
 
                 Column {
                     width: parent.width
                     spacing: 8
+                    visible: root.activeTab === "display"
 
                     RowLayout {
                         width: parent.width
@@ -342,12 +494,381 @@ Item {
                     width: parent.width
                     height: 1
                     color: "#18ffffff"
+                    visible: root.activeTab === "display"
                 }
 
                 RowLayout {
                     width: parent.width
-                    height: 72
+                    height: root.activeTab === "wifi" ? settingsNetworkCard.implicitHeight : root.activeTab === "bluetooth" ? settingsBluetoothCard.implicitHeight : 0
                     spacing: 10
+                    visible: root.activeTab === "wifi" || root.activeTab === "bluetooth"
+
+                    Rectangle {
+                        id: settingsNetworkCard
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.activeTab === "wifi"
+                        radius: 14
+                        color: root.bar.pillColor
+                        implicitHeight: settingsNetworkColumn.implicitHeight + 24
+
+                        Column {
+                            id: settingsNetworkColumn
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 12
+                            spacing: 8
+
+                            property var wifiDevice: root.bar.networkDeviceByType(DeviceType.Wifi)
+                            property var wiredDevice: root.bar.networkDeviceByType(DeviceType.Wired)
+
+                            RowLayout {
+                                width: parent.width
+                                height: 28
+                                spacing: 8
+
+                                Text {
+                                    text: ""
+                                    color: root.bar.networkTextColor
+                                    font.family: root.bar.iconFont
+                                    font.pixelSize: 16
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: "Network"
+                                    color: root.bar.textColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 14
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Rectangle {
+                                    Layout.preferredWidth: networkRadioLabel.implicitWidth + 18
+                                    Layout.preferredHeight: 26
+                                    radius: 13
+                                    color: root.bar.pillColor
+                                    border.color: "#18ffffff"
+                                    border.width: 1
+
+                                    Text {
+                                        id: networkRadioLabel
+                                        anchors.centerIn: parent
+                                        text: settingsNetworkColumn.wifiDevice ? "WiFi" : "Wired"
+                                        color: root.bar.networkTextColor
+                                        font.family: root.bar.barFont
+                                        font.pixelSize: 12
+                                    }
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: root.bar.networkText()
+                                color: root.bar.mutedTextColor
+                                font.family: root.bar.barFont
+                                font.pixelSize: 12
+                                elide: Text.ElideRight
+                            }
+
+                            RowLayout {
+                                width: parent.width
+                                height: 30
+                                spacing: 8
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 30
+                                    radius: 15
+                                    color: wifiToggleMouse.containsMouse ? root.bar.activePillColor : root.bar.sectionPillColor
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Toggle WiFi"
+                                        color: root.bar.networkTextColor
+                                        font.family: root.bar.barFont
+                                        font.pixelSize: 12
+                                    }
+
+                                    MouseArea {
+                                        id: wifiToggleMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: root.bar.toggleWifiRadio()
+                                    }
+                                }
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 30
+                                    radius: 15
+                                    color: settingsNetworkColumn.wifiDevice && settingsNetworkColumn.wifiDevice.scannerEnabled ? root.bar.activePillColor : root.bar.sectionPillColor
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: settingsNetworkColumn.wifiDevice && settingsNetworkColumn.wifiDevice.scannerEnabled ? "Scanning" : "Scan"
+                                        color: root.bar.networkTextColor
+                                        font.family: root.bar.barFont
+                                        font.pixelSize: 12
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            if (settingsNetworkColumn.wifiDevice) {
+                                                settingsNetworkColumn.wifiDevice.scannerEnabled = !settingsNetworkColumn.wifiDevice.scannerEnabled;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                visible: !settingsNetworkColumn.wifiDevice
+                                text: settingsNetworkColumn.wiredDevice ? root.bar.networkNameText(settingsNetworkColumn.wiredDevice) : "No network device"
+                                color: root.bar.mutedTextColor
+                                font.family: root.bar.barFont
+                                font.pixelSize: 12
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+
+                            Repeater {
+                                model: settingsNetworkColumn.wifiDevice ? root.bar.wifiNetworksForDevice(settingsNetworkColumn.wifiDevice).slice(0, 4) : []
+
+                                Rectangle {
+                                    width: settingsNetworkColumn.width
+                                    height: 30
+                                    radius: 15
+                                    color: modelData.connected ? root.bar.activePillColor : settingsWifiMouse.containsMouse ? "#4a282828" : root.bar.sectionPillColor
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 10
+                                        anchors.rightMargin: 10
+                                        spacing: 8
+
+                                        Text {
+                                            text: modelData.connected ? "" : root.bar.wifiNetworkLockIcon(modelData)
+                                            color: root.bar.networkTextColor
+                                            font.family: root.bar.iconFont
+                                            font.pixelSize: 13
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Text {
+                                            text: modelData.name || "Hidden network"
+                                            color: root.bar.textColor
+                                            font.family: root.bar.barFont
+                                            font.pixelSize: 12
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Text {
+                                            text: root.bar.wifiNetworkStatusText(modelData)
+                                            color: root.bar.mutedTextColor
+                                            font.family: root.bar.barFont
+                                            font.pixelSize: 11
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: settingsWifiMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: root.bar.connectWifiNetwork(modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        id: settingsBluetoothCard
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: root.activeTab === "bluetooth"
+                        radius: 14
+                        color: root.bar.pillColor
+                        implicitHeight: settingsBluetoothColumn.implicitHeight + 24
+
+                        Column {
+                            id: settingsBluetoothColumn
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.margins: 12
+                            spacing: 8
+
+                            RowLayout {
+                                width: parent.width
+                                height: 28
+                                spacing: 8
+
+                                Text {
+                                    text: ""
+                                    color: root.bar.bluetoothTextColor
+                                    font.family: root.bar.iconFont
+                                    font.pixelSize: 16
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Text {
+                                    text: "Bluetooth"
+                                    color: root.bar.textColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 14
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                Rectangle {
+                                    Layout.preferredWidth: 54
+                                    Layout.preferredHeight: 26
+                                    radius: 13
+                                    color: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled ? root.bar.activePillColor : root.bar.sectionPillColor
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled ? "On" : "Off"
+                                        color: root.bar.bluetoothTextColor
+                                        font.family: root.bar.barFont
+                                        font.pixelSize: 12
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            if (Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled;
+                                        }
+                                    }
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                text: Bluetooth.defaultAdapter ? root.bar.bluetoothConnectedDeviceText() || Bluetooth.defaultAdapter.name || "Bluetooth" : "No adapter"
+                                color: root.bar.mutedTextColor
+                                font.family: root.bar.barFont
+                                font.pixelSize: 12
+                                elide: Text.ElideRight
+                            }
+
+                            RowLayout {
+                                width: parent.width
+                                height: 30
+                                spacing: 8
+
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 30
+                                    radius: 15
+                                    color: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.discovering ? root.bar.activePillColor : root.bar.sectionPillColor
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.discovering ? "Scanning" : "Scan"
+                                        color: root.bar.bluetoothTextColor
+                                        font.family: root.bar.barFont
+                                        font.pixelSize: 12
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            var adapter = Bluetooth.defaultAdapter;
+                                            if (!adapter || !adapter.enabled) return;
+                                            adapter.discovering = !adapter.discovering;
+                                            root.bar.updateBluetoothNameMap();
+                                        }
+                                    }
+                                }
+                            }
+
+                            Text {
+                                width: parent.width
+                                visible: !Bluetooth.defaultAdapter || !Bluetooth.defaultAdapter.enabled
+                                text: Bluetooth.defaultAdapter ? "Bluetooth off" : "No bluetooth adapter"
+                                color: root.bar.mutedTextColor
+                                font.family: root.bar.barFont
+                                font.pixelSize: 12
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+
+                            Repeater {
+                                model: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled ? Bluetooth.defaultAdapter.devices.values.slice(0, 4) : []
+
+                                Rectangle {
+                                    width: settingsBluetoothColumn.width
+                                    height: 30
+                                    radius: 15
+                                    color: modelData.connected ? root.bar.activePillColor : settingsBluetoothMouse.containsMouse ? "#4a282828" : root.bar.sectionPillColor
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 10
+                                        anchors.rightMargin: 10
+                                        spacing: 8
+
+                                        Text {
+                                            text: modelData.connected ? "󰂱" : "󰂯"
+                                            color: root.bar.bluetoothTextColor
+                                            font.family: root.bar.iconFont
+                                            font.pixelSize: 13
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Text {
+                                            text: root.bar.bluetoothDeviceName(modelData)
+                                            color: root.bar.textColor
+                                            font.family: root.bar.barFont
+                                            font.pixelSize: 12
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        Text {
+                                            text: root.bar.bluetoothDeviceStatus(modelData)
+                                            color: root.bar.mutedTextColor
+                                            font.family: root.bar.barFont
+                                            font.pixelSize: 11
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: settingsBluetoothMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: root.bar.toggleBluetoothDevice(modelData)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Rectangle {
+                    width: parent.width
+                    height: 1
+                    color: "#18ffffff"
+                    visible: root.activeTab === "display"
+                }
+
+                RowLayout {
+                    width: parent.width
+                    height: root.activeTab === "display" ? 72 : 0
+                    spacing: 10
+                    visible: root.activeTab === "display"
 
                     Rectangle {
                         Layout.fillWidth: true
@@ -482,8 +1003,9 @@ Item {
 
                 RowLayout {
                     width: parent.width
-                    height: 38
+                    height: root.activeTab === "display" ? 38 : 0
                     spacing: 8
+                    visible: root.activeTab === "display"
 
                     Repeater {
                         model: [

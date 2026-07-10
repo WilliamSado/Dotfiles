@@ -76,6 +76,7 @@ PanelWindow {
     property alias powerPopupClosing: booleans.powerPopupClosing
     property alias hyprSettingsClosing: booleans.hyprSettingsClosing
     property alias quickSettingsClosing: booleans.quickSettingsClosing
+    property alias suppressQuickSettingsCloseAnimation: booleans.suppressQuickSettingsCloseAnimation
     property alias audioOutputScanInSinks: booleans.audioOutputScanInSinks
     property alias audioOutputsExpanded: booleans.audioOutputsExpanded
     property alias clockShowDate: booleans.clockShowDate
@@ -110,6 +111,11 @@ PanelWindow {
         || clockPopupOpen
         || hyprSettingsOpen
         || quickSettingsOpen
+    readonly property bool clickAwayOpen: bluetoothPopupOpen
+        || powerPopupOpen
+        || volumePopupOpen
+        || networkPopupOpen
+        || clockPopupOpen
     readonly property int clickAwayHoleX: bluetoothPopupOpen ? bluetoothPopup.relativeX
         : powerPopupOpen ? powerPopup.relativeX
         : volumePopupOpen ? volumePopup.relativeX
@@ -200,6 +206,10 @@ PanelWindow {
     onQuickSettingsOpenChanged: {
         if (quickSettingsOpen) {
             quickSettingsClosing = false;
+        } else if (suppressQuickSettingsCloseAnimation) {
+            suppressQuickSettingsCloseAnimation = false;
+            quickSettingsClosing = false;
+            quickSettingsCloseTimer.stop();
         } else if (!quickSettingsClosing) {
             quickSettingsClosing = true;
             quickSettingsCloseTimer.restart();
@@ -255,11 +265,27 @@ PanelWindow {
         quickBrightnessProc.running = true;
     }
 
+    function openHyprSettings() {
+        closePopupsExcept("hyprSettings");
+        hyprSettingsOpen = true;
+        refreshHyprMonitors();
+        Qt.callLater(function() {
+            hyprSettingsPopup.focusWallpaperInput();
+        });
+    }
+
     function closeQuickSettings() {
         if (!quickSettingsOpen) return;
         quickSettingsClosing = true;
         quickSettingsCloseTimer.restart();
         quickSettingsOpen = false;
+    }
+
+    function hideQuickSettingsImmediately() {
+        suppressQuickSettingsCloseAnimation = true;
+        quickSettingsCloseTimer.stop();
+        quickSettingsOpen = false;
+        quickSettingsClosing = false;
     }
 
     function closePopupsExcept(name) {
@@ -718,10 +744,27 @@ PanelWindow {
         return active ? activePillColor : pillColor;
     }
 
+    function applyThemePreset(preset) {
+        if (!preset) return;
+
+        pillColor = preset.pill || "#33282828";
+        sectionPillColor = preset.section || "#33121212";
+        activePillColor = preset.active || "#99121212";
+        textColor = preset.text || "#ffffff";
+        mutedTextColor = preset.muted || "#40ffffff";
+        windowTextColor = preset.window || preset.accent || "#e6f2d6";
+        bluetoothTextColor = preset.bluetooth || preset.accent || "#f6a4fe";
+        clockTextColor = preset.clock || preset.accent || "#eefff1";
+        cpuTextColor = preset.cpu || preset.warn || "#FE968B";
+        memoryTextColor = preset.memory || preset.warm || "#FFEAAA";
+        audioTextColor = preset.audio || preset.accent2 || "#a4e4fe";
+        networkTextColor = preset.network || preset.accent || "#b0f5e5";
+    }
+
     function setBrightnessPercent(percent) {
         var clamped = Math.max(1, Math.min(100, Math.round(percent)));
         quickBrightnessPercent = clamped;
-        runQuickCommand("if command -v brightnessctl >/dev/null 2>&1; then brightnessctl set " + clamped + "%; else exit 1; fi", "Brightness " + clamped + "%");
+        runQuickCommand("if command -v brightnessctl >/dev/null 2>&1 && ls /sys/class/backlight/* >/dev/null 2>&1; then brightnessctl set " + clamped + "%; elif command -v ddcutil >/dev/null 2>&1; then ddcutil setvcp 10 " + clamped + "; else exit 1; fi", "Brightness " + clamped + "%");
     }
 
     function toggleWifiRadio() {
@@ -729,11 +772,9 @@ PanelWindow {
     }
 
     function openHyprSettingsFromQuickSettings() {
-        closeQuickSettings();
-        hyprSettingsOpen = true;
-        refreshHyprMonitors();
+        hideQuickSettingsImmediately();
         Qt.callLater(function() {
-            hyprSettingsPopup.focusWallpaperInput();
+            openHyprSettings();
         });
     }
 
@@ -1095,12 +1136,14 @@ PanelWindow {
     Process {
         id: quickCommandProc
         command: ["sh", "-c", "echo"]
-        onExited: quickSettingsStatusText = "Done"
+        onExited: function(exitCode, exitStatus) {
+            quickSettingsStatusText = exitCode === 0 ? "Done" : "Failed";
+        }
     }
 
     Process {
         id: quickBrightnessProc
-        command: ["sh", "-c", "if command -v brightnessctl >/dev/null 2>&1; then brightnessctl -m | awk -F, '{gsub(/%/, \"\", $4); print $4}'; fi"]
+        command: ["sh", "-c", "if command -v brightnessctl >/dev/null 2>&1 && ls /sys/class/backlight/* >/dev/null 2>&1; then brightnessctl -m | awk -F, '{gsub(/%/, \"\", $4); print $4}'; elif command -v ddcutil >/dev/null 2>&1; then ddcutil getvcp 10 2>/dev/null | sed -n 's/.*current value = *\\([0-9][0-9]*\\).*/\\1/p' | head -n 1; fi"]
         stdout: SplitParser {
             onRead: function(data) {
                 var value = parseInt(data.trim());
@@ -1674,7 +1717,7 @@ PanelWindow {
     PopupWindow {
         id: popupClickAwayLayer
         parentWindow: barWindow
-        visible: anyPopupOpen
+        visible: clickAwayOpen
         implicitWidth: barWindow.screen ? barWindow.screen.width : barWindow.width
         implicitHeight: barWindow.screen ? Math.max(1, barWindow.screen.height - barWindow.implicitHeight) : 720
         relativeX: 0
@@ -2570,7 +2613,7 @@ PanelWindow {
                         visible: networkPopupColumn.device
                             && networkPopupColumn.device.type === DeviceType.Wifi
                             && wifiNetworksForDevice(networkPopupColumn.device).length === 0
-                        text: networkPopupColumn.device.scannerEnabled ? "Scanning..." : "No networks found"
+                        text: networkPopupColumn.device && networkPopupColumn.device.scannerEnabled ? "Scanning..." : "No networks found"
                         color: mutedTextColor
                         font.family: barFont
                         font.pixelSize: 13

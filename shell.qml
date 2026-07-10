@@ -10,6 +10,10 @@ ShellRoot {
         id: barWindow
     }
 
+    BrightnessOverlay {
+        brightnessPercent: barWindow.quickBrightnessPercent
+    }
+
     QuickSettingsEdge {
         targetBar: barWindow
     }

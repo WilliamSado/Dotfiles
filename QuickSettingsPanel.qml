@@ -40,19 +40,6 @@ Item {
 
             Behavior on x { NumberAnimation { duration: root.bar.popupAnimationMs + 40; easing.type: Easing.OutCubic } }
 
-            MouseArea {
-                anchors.fill: parent
-                property real pressX: 0
-
-                onPressed: function(mouse) {
-                    pressX = mouse.x;
-                }
-
-                onPositionChanged: function(mouse) {
-                    if (pressed && mouse.x > pressX + 80) root.bar.closeQuickSettings();
-                }
-            }
-
             Column {
                 id: quickSettingsColumn
                 anchors.left: parent.left

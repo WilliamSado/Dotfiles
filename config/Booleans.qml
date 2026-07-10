@@ -15,6 +15,7 @@ QtObject {
     property bool powerPopupClosing: false
     property bool hyprSettingsClosing: false
     property bool quickSettingsClosing: false
+    property bool suppressQuickSettingsCloseAnimation: false
     property bool audioOutputScanInSinks: false
     property bool audioOutputsExpanded: false
     property bool clockShowDate: false
