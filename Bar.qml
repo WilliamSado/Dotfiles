@@ -1031,6 +1031,13 @@ PanelWindow {
         });
     }
 
+    function openControlCenterFromQuickSettings(page) {
+        hideQuickSettingsImmediately();
+        Qt.callLater(function() {
+            openControlCenter(page);
+        });
+    }
+
     function pasteClipboardInto(input) {
         if (!input) return;
 
