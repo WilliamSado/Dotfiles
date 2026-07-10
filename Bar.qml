@@ -198,10 +198,6 @@ PanelWindow {
         || clockPopupOpen
         || performancePopupOpen
         || notificationCenterOpen
-        || launcherOpen
-        || clipboardOpen
-        || captureOpen
-        || windowSwitcherOpen
     readonly property int clickAwayHoleX: bluetoothPopupOpen ? bluetoothPopup.relativeX
         : powerPopupOpen ? powerPopup.relativeX
         : volumePopupOpen ? volumePopup.relativeX
