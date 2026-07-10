@@ -231,11 +231,12 @@ Item {
 
             var name = parts[0].trim();
             var id = parts[1].trim();
-            var execCommand = parts.length >= 3 ? cleanDesktopExec(parts.slice(2).join("\t")) : "";
+            var desktopPath = parts.length >= 3 ? parts[2].trim() : "";
+            var execCommand = parts.length >= 4 ? cleanDesktopExec(parts.slice(3).join("\t")) : "";
             if (name.length === 0 || id.length === 0 || seen[id]) continue;
 
             seen[id] = true;
-            items.push({ type: "app", icon: "󰣆", name: name, sub: id, action: id, execCommand: execCommand });
+            items.push({ type: "app", icon: "󰣆", name: name, sub: id, action: id, desktopPath: desktopPath, execCommand: execCommand });
         }
 
         launcherApps = items;
@@ -323,7 +324,12 @@ Item {
             root.bar.closeControlCenter();
             var fallback = cleanDesktopExec(item.execCommand);
             var command = "gtk-launch " + shellQuote(item.action) + " >/dev/null 2>&1";
-            if (fallback.length > 0) command += " || ( " + fallback + " >/dev/null 2>&1 & )";
+            if (item.desktopPath && item.desktopPath.length > 0) {
+                command += " || gio launch " + shellQuote(item.desktopPath) + " >/dev/null 2>&1";
+            }
+            if (fallback.length > 0) {
+                command += " || setsid -f sh -c " + shellQuote("exec " + fallback) + " >/dev/null 2>&1";
+            }
             launcherStatus = "Launching " + item.name;
             launcherCommandProc.command = ["sh", "-c", command];
             launcherCommandProc.running = true;
@@ -1293,7 +1299,7 @@ Item {
 
     Process {
         id: launcherAppsProc
-        command: ["sh", "-c", "for dir in /usr/share/applications \"$HOME/.local/share/applications\"; do [ -d \"$dir\" ] || continue; find \"$dir\" -maxdepth 1 -name '*.desktop' -type f; done | while IFS= read -r file; do if grep -qE '^(NoDisplay|Hidden)=true' \"$file\"; then continue; fi; name=$(grep -m1 '^Name=' \"$file\" | cut -d= -f2-); id=$(basename \"$file\" .desktop); exec_line=$(grep -m1 '^Exec=' \"$file\" | cut -d= -f2-); [ -n \"$name\" ] && printf '%s\\t%s\\t%s\\n' \"$name\" \"$id\" \"$exec_line\"; done | sort -fu | head -n 180"]
+        command: ["sh", "-c", "for dir in /usr/share/applications \"$HOME/.local/share/applications\"; do [ -d \"$dir\" ] || continue; find \"$dir\" -maxdepth 1 -name '*.desktop' -type f; done | while IFS= read -r file; do if grep -qE '^(NoDisplay|Hidden)=true' \"$file\"; then continue; fi; name=$(grep -m1 '^Name=' \"$file\" | cut -d= -f2-); id=$(basename \"$file\" .desktop); exec_line=$(grep -m1 '^Exec=' \"$file\" | cut -d= -f2-); [ -n \"$name\" ] && printf '%s\\t%s\\t%s\\t%s\\n' \"$name\" \"$id\" \"$file\" \"$exec_line\"; done | sort -fu | head -n 180"]
 
         stdout: StdioCollector {
             waitForEnd: true
