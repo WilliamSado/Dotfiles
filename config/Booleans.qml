@@ -28,4 +28,6 @@ QtObject {
     property bool performancePopupClosing: false
     property bool notificationCenterOpen: false
     property bool notificationCenterClosing: false
+    property bool controlCenterOpen: false
+    property bool controlCenterClosing: false
 }

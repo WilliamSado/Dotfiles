@@ -95,8 +95,11 @@ PanelWindow {
     property alias performancePopupClosing: booleans.performancePopupClosing
     property alias notificationCenterOpen: booleans.notificationCenterOpen
     property alias notificationCenterClosing: booleans.notificationCenterClosing
+    property alias controlCenterOpen: booleans.controlCenterOpen
+    property alias controlCenterClosing: booleans.controlCenterClosing
 
     property string networkPopupMode: "active"
+    property string controlCenterPage: "launcher"
     property string currentThemeName: "Tela Cyan"
     property string hyprWallpaperPath: ""
     property var wallpaperDirectories: ["/home/sado/Pictures/wallpapers"]
@@ -147,6 +150,7 @@ PanelWindow {
         || notificationCenterOpen
         || hyprSettingsOpen
         || quickSettingsOpen
+        || controlCenterOpen
     readonly property bool clickAwayOpen: bluetoothPopupOpen
         || powerPopupOpen
         || volumePopupOpen
@@ -258,6 +262,15 @@ PanelWindow {
         }
     }
 
+    onControlCenterOpenChanged: {
+        if (controlCenterOpen) {
+            controlCenterClosing = false;
+        } else if (!controlCenterClosing) {
+            controlCenterClosing = true;
+            controlCenterCloseTimer.restart();
+        }
+    }
+
     onHyprSettingsOpenChanged: {
         if (hyprSettingsOpen) {
             hyprSettingsClosing = false;
@@ -329,6 +342,13 @@ PanelWindow {
         notificationCenterOpen = false;
     }
 
+    function closeControlCenter() {
+        if (!controlCenterOpen) return;
+        controlCenterClosing = true;
+        controlCenterCloseTimer.restart();
+        controlCenterOpen = false;
+    }
+
     function closeHyprSettings() {
         if (!hyprSettingsOpen) return;
         hyprSettingsClosing = true;
@@ -350,6 +370,12 @@ PanelWindow {
         Qt.callLater(function() {
             hyprSettingsPopup.focusWallpaperInput();
         });
+    }
+
+    function openControlCenter(page) {
+        controlCenterPage = page || "launcher";
+        closePopupsExcept("controlCenter");
+        controlCenterOpen = true;
     }
 
     function closeQuickSettings() {
@@ -374,6 +400,7 @@ PanelWindow {
         if (name !== "clock") closeClockPopup();
         if (name !== "performance") closePerformancePopup();
         if (name !== "notifications") closeNotificationCenter();
+        if (name !== "controlCenter") closeControlCenter();
         if (name !== "hyprSettings") closeHyprSettings();
         if (name !== "quickSettings") closeQuickSettings();
     }
@@ -1637,6 +1664,13 @@ PanelWindow {
         interval: popupAnimationMs
         repeat: false
         onTriggered: notificationCenterClosing = false
+    }
+
+    Timer {
+        id: controlCenterCloseTimer
+        interval: popupAnimationMs
+        repeat: false
+        onTriggered: controlCenterClosing = false
     }
 
     Timer {
@@ -4009,5 +4043,13 @@ PanelWindow {
     QuickSettingsPanel {
         id: quickSettingsWindow
         bar: barWindow
+    }
+
+    Loader {
+        id: controlCenterPopup
+        active: controlCenterOpen || controlCenterClosing
+        sourceComponent: ControlCenterPopup {
+            bar: barWindow
+        }
     }
 }
