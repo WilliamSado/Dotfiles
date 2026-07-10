@@ -191,13 +191,7 @@ PanelWindow {
         || clipboardOpen
         || captureOpen
         || windowSwitcherOpen
-    readonly property bool clickAwayOpen: bluetoothPopupOpen
-        || powerPopupOpen
-        || volumePopupOpen
-        || networkPopupOpen
-        || clockPopupOpen
-        || performancePopupOpen
-        || notificationCenterOpen
+    readonly property bool clickAwayOpen: false
     readonly property int clickAwayHoleX: bluetoothPopupOpen ? bluetoothPopup.relativeX
         : powerPopupOpen ? powerPopup.relativeX
         : volumePopupOpen ? volumePopup.relativeX
