@@ -14,6 +14,17 @@ Item {
     property bool recording: false
     property var windowItems: []
     property string windowStatus: "Ready"
+    property var launcherApps: []
+    property string launcherQuery: ""
+    property string launcherStatus: "Ready"
+    readonly property var launcherBuiltins: [
+        { type: "builtin", icon: "", name: "Lock", sub: "hyprlock", action: "lock" },
+        { type: "builtin", icon: "󰒓", name: "Settings", sub: "Hyprland settings", action: "settings" },
+        { type: "builtin", icon: "", name: "Capture", sub: "Screenshot / recording", action: "capture" },
+        { type: "builtin", icon: "", name: "Clipboard", sub: "Clipboard history", action: "clipboard" },
+        { type: "builtin", icon: "󰖯", name: "Windows", sub: "Window manager", action: "windows" },
+        { type: "builtin", icon: "󰒲", name: "Focus", sub: "Toggle focus mode", action: "focus" }
+    ]
 
     readonly property int relativeX: popup.relativeX
     readonly property int relativeY: popup.relativeY
@@ -40,6 +51,7 @@ Item {
     }
 
     function pagePanelHeight() {
+        if (root.bar.controlCenterPage === "launcher") return 350;
         if (root.bar.controlCenterPage === "clipboard") return 310;
         if (root.bar.controlCenterPage === "capture") return 292;
         if (root.bar.controlCenterPage === "windows") return 350;
@@ -196,6 +208,75 @@ Item {
         runWindowCommand("hyprctl dispatch focuswindow address:" + shellQuote(window.address) + "; hyprctl dispatch pin", "Pin toggled", false);
     }
 
+    function refreshLauncher() {
+        launcherStatus = "Loading apps";
+        launcherAppsProc.running = true;
+    }
+
+    function parseLauncherApps(text) {
+        var items = [];
+        var seen = ({});
+        var lines = String(text || "").split("\n");
+        for (var i = 0; i < lines.length; i++) {
+            var parts = lines[i].split("\t");
+            if (parts.length < 2) continue;
+
+            var name = parts[0].trim();
+            var id = parts[1].trim();
+            if (name.length === 0 || id.length === 0 || seen[id]) continue;
+
+            seen[id] = true;
+            items.push({ type: "app", icon: "󰣆", name: name, sub: id, action: id });
+        }
+
+        launcherApps = items;
+        launcherStatus = items.length > 0 ? items.length + " apps" : "No apps";
+    }
+
+    function launcherResults() {
+        var query = launcherQuery.toLowerCase().trim();
+        var source = launcherBuiltins.concat(launcherApps);
+        if (query.length === 0) return source.slice(0, 18);
+
+        var results = [];
+        for (var i = 0; i < source.length; i++) {
+            var item = source[i];
+            var haystack = (item.name + " " + item.sub + " " + item.action).toLowerCase();
+            if (haystack.indexOf(query) >= 0) results.push(item);
+            if (results.length >= 18) break;
+        }
+        return results;
+    }
+
+    function launchItem(item) {
+        if (!item) return;
+
+        if (item.type === "app") {
+            root.bar.closeControlCenter();
+            launcherCommandProc.command = ["gtk-launch", item.action];
+            launcherCommandProc.running = true;
+            return;
+        }
+
+        if (item.action === "lock") {
+            root.bar.closeControlCenter();
+            launcherCommandProc.command = ["hyprlock"];
+            launcherCommandProc.running = true;
+        } else if (item.action === "settings") {
+            root.bar.openHyprSettings();
+        } else if (item.action === "capture") {
+            root.bar.controlCenterPage = "capture";
+        } else if (item.action === "clipboard") {
+            root.bar.controlCenterPage = "clipboard";
+            refreshClipboard();
+        } else if (item.action === "windows") {
+            root.bar.controlCenterPage = "windows";
+            refreshWindows();
+        } else if (item.action === "focus") {
+            root.bar.toggleFocusMode();
+        }
+    }
+
     PopupWindow {
         id: popup
         parentWindow: root.bar
@@ -205,9 +286,13 @@ Item {
         relativeX: Math.max(root.bar.barSideMargin, root.bar.width - implicitWidth - root.bar.barSideMargin)
         relativeY: root.bar.implicitHeight + 22
         color: "transparent"
-        grabFocus: false
+        grabFocus: root.bar.controlCenterOpen && root.bar.controlCenterPage === "launcher"
         onClosed: root.bar.closeControlCenter()
         onVisibleChanged: {
+            if (visible && root.bar.controlCenterPage === "launcher") {
+                root.refreshLauncher();
+                Qt.callLater(function() { launcherSearch.forceActiveFocus(); });
+            }
             if (visible && root.bar.controlCenterPage === "clipboard") root.refreshClipboard();
             if (visible && root.bar.controlCenterPage === "windows") root.refreshWindows();
         }
@@ -324,6 +409,10 @@ Item {
                                 hoverEnabled: true
                                 onClicked: {
                                     root.bar.controlCenterPage = modelData.key;
+                                    if (modelData.key === "launcher") {
+                                        root.refreshLauncher();
+                                        Qt.callLater(function() { launcherSearch.forceActiveFocus(); });
+                                    }
                                     if (modelData.key === "clipboard") root.refreshClipboard();
                                     if (modelData.key === "windows") root.refreshWindows();
                                 }
@@ -339,7 +428,7 @@ Item {
                     color: root.bar.sectionPillColor
 
                     Column {
-                        visible: root.bar.controlCenterPage !== "focus" && root.bar.controlCenterPage !== "clipboard" && root.bar.controlCenterPage !== "capture" && root.bar.controlCenterPage !== "windows"
+                        visible: root.bar.controlCenterPage !== "focus" && root.bar.controlCenterPage !== "clipboard" && root.bar.controlCenterPage !== "capture" && root.bar.controlCenterPage !== "windows" && root.bar.controlCenterPage !== "launcher"
                         anchors.centerIn: parent
                         spacing: 8
 
@@ -365,6 +454,136 @@ Item {
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 12
+                        }
+                    }
+
+                    Column {
+                        visible: root.bar.controlCenterPage === "launcher"
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: 14
+                        spacing: 10
+
+                        Rectangle {
+                            width: parent.width
+                            height: 42
+                            radius: 18
+                            color: root.bar.pillColor
+                            border.color: launcherSearch.activeFocus ? root.bar.networkTextColor : "transparent"
+                            border.width: launcherSearch.activeFocus ? 1 : 0
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+                                spacing: 10
+
+                                Text {
+                                    text: ""
+                                    color: root.bar.mutedTextColor
+                                    font.family: root.bar.iconFont
+                                    font.pixelSize: 14
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                TextInput {
+                                    id: launcherSearch
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    text: root.launcherQuery
+                                    color: root.bar.textColor
+                                    selectionColor: root.bar.activePillColor
+                                    selectedTextColor: root.bar.textColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 13
+                                    clip: true
+                                    onTextChanged: root.launcherQuery = text
+                                    Keys.onEscapePressed: root.bar.closeControlCenter()
+                                    Keys.onReturnPressed: {
+                                        var results = root.launcherResults();
+                                        if (results.length > 0) root.launchItem(results[0]);
+                                    }
+                                }
+
+                                Text {
+                                    text: root.launcherStatus
+                                    color: root.bar.mutedTextColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 11
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+                            }
+                        }
+
+                        Flickable {
+                            width: parent.width
+                            height: 270
+                            contentWidth: width
+                            contentHeight: launcherList.implicitHeight
+                            clip: true
+
+                            Column {
+                                id: launcherList
+                                width: parent.width
+                                spacing: 8
+
+                                Repeater {
+                                    model: root.launcherResults()
+
+                                    Rectangle {
+                                        width: launcherList.width
+                                        height: 46
+                                        radius: 14
+                                        color: launcherMouse.containsMouse ? root.bar.activePillColor : root.bar.pillColor
+
+                                        RowLayout {
+                                            anchors.fill: parent
+                                            anchors.margins: 10
+                                            spacing: 10
+
+                                            Text {
+                                                text: modelData.icon
+                                                color: root.bar.textColor
+                                                font.family: root.bar.iconFont
+                                                font.pixelSize: 15
+                                                Layout.alignment: Qt.AlignVCenter
+                                            }
+
+                                            Column {
+                                                Layout.fillWidth: true
+                                                Layout.alignment: Qt.AlignVCenter
+                                                spacing: 2
+
+                                                Text {
+                                                    width: parent.width
+                                                    text: modelData.name
+                                                    color: root.bar.textColor
+                                                    font.family: root.bar.barFont
+                                                    font.pixelSize: 12
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                Text {
+                                                    width: parent.width
+                                                    text: modelData.sub
+                                                    color: root.bar.mutedTextColor
+                                                    font.family: root.bar.barFont
+                                                    font.pixelSize: 10
+                                                    elide: Text.ElideRight
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: launcherMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            onClicked: root.launchItem(modelData)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -978,5 +1197,30 @@ Item {
         interval: 220
         repeat: false
         onTriggered: root.refreshWindows()
+    }
+
+    Process {
+        id: launcherAppsProc
+        command: ["sh", "-c", "for dir in /usr/share/applications \"$HOME/.local/share/applications\"; do [ -d \"$dir\" ] || continue; find \"$dir\" -maxdepth 1 -name '*.desktop' -type f; done | while IFS= read -r file; do if grep -qE '^(NoDisplay|Hidden)=true' \"$file\"; then continue; fi; name=$(grep -m1 '^Name=' \"$file\" | cut -d= -f2-); id=$(basename \"$file\" .desktop); [ -n \"$name\" ] && printf '%s\\t%s\\n' \"$name\" \"$id\"; done | sort -fu | head -n 160"]
+
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: root.parseLauncherApps(text)
+        }
+
+        onExited: function(exitCode) {
+            if (exitCode !== 0) {
+                root.launcherApps = [];
+                root.launcherStatus = "Could not read apps";
+            }
+        }
+    }
+
+    Process {
+        id: launcherCommandProc
+        command: ["sh", "-c", "true"]
+        onExited: function(exitCode) {
+            if (exitCode !== 0) root.launcherStatus = "Launch failed";
+        }
     }
 }
