@@ -19,6 +19,10 @@ Item {
     property string launcherStatus: "Ready"
     property int launcherSelectedIndex: 0
     readonly property var launcherBuiltins: [
+        { type: "builtin", icon: "󰖟", name: "Web Search", sub: "Search current query", action: "web" },
+        { type: "builtin", icon: "", name: "Files", sub: "Open home folder", action: "files" },
+        { type: "builtin", icon: "", name: "Terminal", sub: "Open terminal", action: "terminal" },
+        { type: "builtin", icon: "󰑓", name: "Reload QS", sub: "Restart Quickshell config", action: "reload" },
         { type: "builtin", icon: "", name: "Lock", sub: "hyprlock", action: "lock" },
         { type: "builtin", icon: "󰒓", name: "Settings", sub: "Hyprland settings", action: "settings" },
         { type: "builtin", icon: "", name: "Capture", sub: "Screenshot / recording", action: "capture" },
@@ -245,7 +249,7 @@ Item {
 
     function launcherResults() {
         var query = launcherQuery.toLowerCase().trim();
-        var source = launcherBuiltins.concat(launcherWindowItems()).concat(launcherApps);
+        var source = launcherBuiltins.concat(recentLauncherItems()).concat(launcherWindowItems()).concat(launcherApps);
         if (query.length === 0) return source.slice(0, 18);
 
         var results = [];
@@ -256,6 +260,41 @@ Item {
             if (results.length >= 18) break;
         }
         return results;
+    }
+
+    function recentLauncherItems() {
+        var items = [];
+        var recent = root.bar.recentLauncherApps || [];
+        for (var i = 0; i < recent.length; i++) {
+            var id = recent[i];
+            for (var j = 0; j < launcherApps.length; j++) {
+                if (launcherApps[j].action === id) {
+                    var app = launcherApps[j];
+                    items.push({
+                        type: "app",
+                        icon: "󰋚",
+                        name: app.name,
+                        sub: "Recent · " + app.sub,
+                        action: app.action,
+                        desktopPath: app.desktopPath,
+                        execCommand: app.execCommand
+                    });
+                    break;
+                }
+            }
+        }
+        return items;
+    }
+
+    function rememberLauncherApp(item) {
+        if (!item || item.type !== "app") return;
+        var next = [item.action];
+        var recent = root.bar.recentLauncherApps || [];
+        for (var i = 0; i < recent.length; i++) {
+            if (recent[i] !== item.action && next.length < 8) next.push(recent[i]);
+        }
+        root.bar.recentLauncherApps = next;
+        root.bar.persistSettings();
     }
 
     function launcherWindowItems() {
@@ -322,6 +361,7 @@ Item {
 
         if (item.type === "app") {
             root.bar.closeControlCenter();
+            rememberLauncherApp(item);
             var fallback = cleanDesktopExec(item.execCommand);
             var cleanEnv = "env -u ELECTRON_RUN_AS_NODE -u ELECTRON_NO_ATTACH_CONSOLE ";
             var command = "";
@@ -346,6 +386,27 @@ Item {
         if (item.action === "lock") {
             root.bar.closeControlCenter();
             launcherCommandProc.command = ["hyprlock"];
+            launcherCommandProc.running = true;
+        } else if (item.action === "web") {
+            var query = launcherQuery.trim();
+            if (query.length === 0) {
+                launcherStatus = "Type a query";
+                return;
+            }
+            root.bar.closeControlCenter();
+            launcherCommandProc.command = ["sh", "-c", "setsid -f xdg-open " + shellQuote("https://duckduckgo.com/?q=" + encodeURIComponent(query)) + " >/tmp/quickshell-launcher.log 2>&1"];
+            launcherCommandProc.running = true;
+        } else if (item.action === "files") {
+            root.bar.closeControlCenter();
+            launcherCommandProc.command = ["sh", "-c", "setsid -f xdg-open \"$HOME\" >/tmp/quickshell-launcher.log 2>&1"];
+            launcherCommandProc.running = true;
+        } else if (item.action === "terminal") {
+            root.bar.closeControlCenter();
+            launcherCommandProc.command = ["sh", "-c", "term=${TERMINAL:-}; if [ -n \"$term\" ]; then setsid -f $term; elif command -v alacritty >/dev/null 2>&1; then setsid -f alacritty; elif command -v kitty >/dev/null 2>&1; then setsid -f kitty; elif command -v foot >/dev/null 2>&1; then setsid -f foot; else exit 1; fi >/tmp/quickshell-launcher.log 2>&1"];
+            launcherCommandProc.running = true;
+        } else if (item.action === "reload") {
+            root.bar.closeControlCenter();
+            launcherCommandProc.command = ["sh", "-c", "qs kill -p /home/sado/.config/quickshell && qs -p /home/sado/.config/quickshell -d >/tmp/quickshell-launcher.log 2>&1"];
             launcherCommandProc.running = true;
         } else if (item.action === "settings") {
             root.bar.openHyprSettings();
