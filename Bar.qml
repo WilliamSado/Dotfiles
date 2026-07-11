@@ -129,6 +129,7 @@ PanelWindow {
     property string dynamicThemeStatus: "Ready"
     property var notificationHistory: []
     property int unreadNotifications: 0
+    property int notificationIdCounter: 0
     property bool settingsApplyingStored: false
     property bool settingsRestoring: false
     property string hyprStatusText: "Ready"
@@ -1145,6 +1146,35 @@ PanelWindow {
         unreadNotifications = 0;
     }
 
+    function openNotificationCenter() {
+        closePopupsExcept("notifications");
+        notificationCenterOpen = true;
+        unreadNotifications = 0;
+    }
+
+    function dismissNotification(uid) {
+        var next = [];
+        for (var i = 0; i < notificationHistory.length; i++) {
+            if (notificationHistory[i].uid !== uid) next.push(notificationHistory[i]);
+        }
+        notificationHistory = next;
+    }
+
+    function notificationGroups() {
+        var groups = [];
+        var indexes = ({});
+        for (var i = 0; i < notificationHistory.length; i++) {
+            var item = notificationHistory[i];
+            var app = item.appName || "Application";
+            if (indexes[app] === undefined) {
+                indexes[app] = groups.length;
+                groups.push({ "appName": app, "items": [] });
+            }
+            groups[indexes[app]].items.push(item);
+        }
+        return groups;
+    }
+
     function toggleDoNotDisturb() {
         notificationsDnd = !notificationsDnd;
         persistSettings();
@@ -1189,6 +1219,7 @@ PanelWindow {
         notification.tracked = true;
         var history = notificationHistory.slice();
         history.unshift({
+            "uid": ++notificationIdCounter,
             "appName": notification.appName || "Application",
             "summary": notification.summary || "",
             "body": notification.body || "",
@@ -2110,11 +2141,7 @@ PanelWindow {
                             return;
                         }
                         if (notificationCenterOpen) closeNotificationCenter();
-                        else {
-                            closePopupsExcept("notifications");
-                            notificationCenterOpen = true;
-                            unreadNotifications = 0;
-                        }
+                        else openNotificationCenter();
                     }
                 }
             }
@@ -3939,40 +3966,104 @@ PanelWindow {
                         spacing: 8
 
                         Repeater {
-                            model: notificationHistory
+                            model: notificationGroups()
 
-                            Rectangle {
+                            Column {
+                                property var groupData: modelData
                                 width: notificationList.width
-                                height: Math.max(58, notificationItemColumn.implicitHeight + 18)
-                                radius: 14
-                                color: pillColor
+                                spacing: 6
 
-                                Column {
-                                    id: notificationItemColumn
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    spacing: 3
+                                RowLayout {
+                                    width: parent.width
+                                    height: 22
+                                    spacing: 8
 
                                     Text {
-                                        width: parent.width
-                                        text: modelData.summary || modelData.appName || "Notification"
-                                        color: textColor
-                                        font.family: barFont
-                                        font.pixelSize: 13
-                                        elide: Text.ElideRight
-                                    }
-
-                                    Text {
-                                        width: parent.width
-                                        text: modelData.body || modelData.appName || ""
-                                        color: mutedTextColor
+                                        text: groupData.appName
+                                        color: clockTextColor
                                         font.family: barFont
                                         font.pixelSize: 12
                                         elide: Text.ElideRight
-                                        visible: text.length > 0
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Text {
+                                        color: mutedTextColor
+                                        text: groupData.items.length
+                                        font.family: barFont
+                                        font.pixelSize: 11
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                }
+
+                                Repeater {
+                                    model: groupData.items
+
+                                    Rectangle {
+                                        property var notificationData: modelData
+                                        width: notificationList.width
+                                        height: Math.max(58, notificationItemColumn.implicitHeight + 18)
+                                        radius: 14
+                                        color: pillColor
+
+                                        RowLayout {
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            anchors.leftMargin: 12
+                                            anchors.rightMargin: 10
+                                            spacing: 8
+
+                                            Column {
+                                                id: notificationItemColumn
+                                                Layout.fillWidth: true
+                                                Layout.alignment: Qt.AlignVCenter
+                                                spacing: 3
+
+                                                Text {
+                                                    width: parent.width
+                                                    text: notificationData.summary || notificationData.appName || "Notification"
+                                                    color: textColor
+                                                    font.family: barFont
+                                                    font.pixelSize: 13
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                Text {
+                                                    width: parent.width
+                                                    text: notificationData.body || notificationData.time || ""
+                                                    color: mutedTextColor
+                                                    font.family: barFont
+                                                    font.pixelSize: 12
+                                                    elide: Text.ElideRight
+                                                    visible: text.length > 0
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                Layout.preferredWidth: 26
+                                                Layout.preferredHeight: 26
+                                                Layout.alignment: Qt.AlignVCenter
+                                                radius: 13
+                                                color: dismissNotificationMouse.containsMouse ? activePillColor : sectionPillColor
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: ""
+                                                    color: mutedTextColor
+                                                    font.family: iconFont
+                                                    font.pixelSize: 11
+                                                }
+
+                                                MouseArea {
+                                                    id: dismissNotificationMouse
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    onClicked: dismissNotification(notificationData.uid)
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }

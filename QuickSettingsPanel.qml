@@ -175,11 +175,7 @@ Item {
                                     else if (modelData.action === "bluetooth" && Bluetooth.defaultAdapter) Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled;
                                     else if (modelData.action === "mute") root.bar.toggleMute();
                                     else if (modelData.action === "display") root.bar.openHyprSettingsFromQuickSettings();
-                                    else if (modelData.action === "notifications") {
-                                        root.bar.closePopupsExcept("notifications");
-                                        root.bar.notificationCenterOpen = true;
-                                        root.bar.unreadNotifications = 0;
-                                    }
+                                    else if (modelData.action === "notifications") root.bar.openNotificationCenter();
                                     else if (modelData.action === "power") {
                                         root.bar.closePopupsExcept("power");
                                         root.bar.powerPopupOpen = true;
