@@ -43,10 +43,6 @@ ShellRoot {
         bar: barWindow
     }
 
-    DesktopWidgets {
-        bar: barWindow
-    }
-
     QuickSettingsEdge {
         targetBar: barWindow
     }
