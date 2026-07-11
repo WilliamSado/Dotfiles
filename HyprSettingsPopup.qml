@@ -354,6 +354,46 @@ Item {
                         font.pixelSize: 12
                     }
 
+                    RowLayout {
+                        width: parent.width
+                        height: 34
+                        spacing: 8
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 34
+                            radius: 17
+                            color: dynamicThemeMouse.containsMouse ? root.bar.activePillColor : root.bar.pillColor
+                            border.color: root.bar.dynamicThemeEnabled ? root.bar.popupBorderColor : "transparent"
+                            border.width: root.bar.dynamicThemeEnabled ? 1 : 0
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: root.bar.dynamicThemeEnabled ? "Wallpaper theme on" : "Use wallpaper color"
+                                color: root.bar.dynamicThemeEnabled ? root.bar.textColor : root.bar.networkTextColor
+                                font.family: root.bar.barFont
+                                font.pixelSize: 12
+                            }
+
+                            MouseArea {
+                                id: dynamicThemeMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: root.bar.extractThemeFromWallpaper()
+                            }
+                        }
+
+                        Text {
+                            Layout.preferredWidth: 170
+                            text: root.bar.dynamicThemeStatus
+                            color: root.bar.mutedTextColor
+                            font.family: root.bar.barFont
+                            font.pixelSize: 11
+                            elide: Text.ElideRight
+                            Layout.alignment: Qt.AlignVCenter
+                        }
+                    }
+
                     Grid {
                         width: parent.width
                         columns: 4

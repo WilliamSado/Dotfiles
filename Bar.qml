@@ -124,6 +124,9 @@ PanelWindow {
     property bool focusModeEnabled: false
     property bool mediaHiddenInFocus: true
     property bool dndBeforeFocusMode: false
+    property bool dynamicThemeEnabled: false
+    property var dynamicThemeColors: ({})
+    property string dynamicThemeStatus: "Ready"
     property var notificationHistory: []
     property int unreadNotifications: 0
     property bool settingsApplyingStored: false
@@ -876,8 +879,14 @@ PanelWindow {
     function applyThemePreset(preset) {
         if (!preset) return;
 
+        dynamicThemeEnabled = false;
         currentThemeName = preset.name || currentThemeName;
         var tone = themeTone(preset);
+        applyThemeTone(tone);
+        persistSettings();
+    }
+
+    function applyThemeTone(tone) {
         pillColor = tone.pill || "#282828";
         sectionPillColor = tone.section || "#121212";
         activePillColor = tone.active || "#3a3a3a";
@@ -892,7 +901,6 @@ PanelWindow {
         memoryTextColor = tone.memory || tone.warm || "#FFEAAA";
         audioTextColor = tone.audio || tone.accent2 || "#a4e4fe";
         networkTextColor = tone.network || tone.accent || "#b0f5e5";
-        persistSettings();
     }
 
     function themeTone(preset) {
@@ -904,7 +912,114 @@ PanelWindow {
 
     function toggleThemeMode() {
         themeMode = themeMode === "light" ? "dark" : "light";
-        applyThemePreset(themePresetByName(currentThemeName));
+        if (dynamicThemeEnabled) {
+            applyDynamicTheme();
+            persistSettings();
+        } else {
+            applyThemePreset(themePresetByName(currentThemeName));
+        }
+    }
+
+    function clampColor(value) {
+        return Math.max(0, Math.min(255, Math.round(value)));
+    }
+
+    function hexToRgb(hex) {
+        var clean = String(hex || "").replace("#", "");
+        if (clean.length === 3) clean = clean[0] + clean[0] + clean[1] + clean[1] + clean[2] + clean[2];
+        if (clean.length !== 6) clean = "66c7c2";
+        return {
+            "r": parseInt(clean.slice(0, 2), 16),
+            "g": parseInt(clean.slice(2, 4), 16),
+            "b": parseInt(clean.slice(4, 6), 16)
+        };
+    }
+
+    function rgbToHex(rgb) {
+        function part(value) {
+            var text = clampColor(value).toString(16);
+            return text.length === 1 ? "0" + text : text;
+        }
+
+        return "#" + part(rgb.r) + part(rgb.g) + part(rgb.b);
+    }
+
+    function mixHex(a, b, amount) {
+        var first = hexToRgb(a);
+        var second = hexToRgb(b);
+        var t = Math.max(0, Math.min(1, amount));
+        return rgbToHex({
+            "r": first.r * (1 - t) + second.r * t,
+            "g": first.g * (1 - t) + second.g * t,
+            "b": first.b * (1 - t) + second.b * t
+        });
+    }
+
+    function dynamicToneFromBase(base, mode) {
+        var accent = base || "#66c7c2";
+        if (mode === "light") {
+            return {
+                "pill": mixHex(accent, "#ffffff", 0.78),
+                "section": mixHex(accent, "#ffffff", 0.9),
+                "active": mixHex(accent, "#ffffff", 0.54),
+                "popup": mixHex(accent, "#ffffff", 0.94),
+                "border": mixHex(accent, "#1a1a1a", 0.24),
+                "text": mixHex(accent, "#101418", 0.7),
+                "muted": mixHex(accent, "#5d6f74", 0.7),
+                "accent": mixHex(accent, "#102022", 0.16),
+                "accent2": mixHex(accent, "#ffffff", 0.34),
+                "bluetooth": mixHex(accent, "#3e5a70", 0.42),
+                "clock": mixHex(accent, "#1d3e45", 0.52),
+                "cpu": mixHex(accent, "#9f3440", 0.46),
+                "memory": mixHex(accent, "#7a6822", 0.38),
+                "window": mixHex(accent, "#1f514e", 0.42),
+                "audio": mixHex(accent, "#245970", 0.38),
+                "network": mixHex(accent, "#15584d", 0.36)
+            };
+        }
+
+        return {
+            "pill": mixHex(accent, "#102022", 0.64),
+            "section": mixHex(accent, "#071012", 0.78),
+            "active": mixHex(accent, "#ffffff", 0.2),
+            "popup": mixHex(accent, "#080f11", 0.82),
+            "border": mixHex(accent, "#ffffff", 0.25),
+            "text": mixHex(accent, "#ffffff", 0.9),
+            "muted": mixHex(accent, "#8aa0a3", 0.62),
+            "accent": mixHex(accent, "#ffffff", 0.36),
+            "accent2": mixHex(accent, "#ffffff", 0.22),
+            "bluetooth": mixHex(accent, "#ffffff", 0.48),
+            "clock": mixHex(accent, "#ffffff", 0.7),
+            "cpu": mixHex(accent, "#ff8b8b", 0.5),
+            "memory": mixHex(accent, "#ffe79a", 0.58),
+            "window": mixHex(accent, "#ffffff", 0.46),
+            "audio": mixHex(accent, "#c5f0ff", 0.46),
+            "network": mixHex(accent, "#d5fff4", 0.44)
+        };
+    }
+
+    function applyDynamicTheme() {
+        var base = dynamicThemeColors.base || dynamicThemeColors.accent || "#66c7c2";
+        dynamicThemeEnabled = true;
+        currentThemeName = "Wallpaper";
+        dynamicThemeColors = {
+            "base": base,
+            "dark": dynamicToneFromBase(base, "dark"),
+            "light": dynamicToneFromBase(base, "light")
+        };
+        applyThemeTone(themeMode === "light" ? dynamicThemeColors.light : dynamicThemeColors.dark);
+    }
+
+    function extractThemeFromWallpaper() {
+        var path = cleanInputPath(hyprWallpaperPath);
+        if (path.length === 0) {
+            dynamicThemeStatus = "No wallpaper";
+            return;
+        }
+
+        dynamicThemeStatus = "Reading wallpaper";
+        dynamicThemeProc.command = ["sh", "-c", "path=" + shellQuote(path) + "; if command -v magick >/dev/null 2>&1; then magick \"$path\" -resize '1x1!' -format '#%[hex:p{0,0}]' info:; elif command -v convert >/dev/null 2>&1; then convert \"$path\" -resize '1x1!' -format '#%[hex:p{0,0}]' info:; elif command -v matugen >/dev/null 2>&1; then matugen image \"$path\" --json hex 2>/dev/null | sed -n 's/.*\"primary\"[[:space:]]*:[[:space:]]*\"\\(#[0-9A-Fa-f]*\\)\".*/\\1/p' | head -n 1; else exit 127; fi"];
+        dynamicThemeProc.running = true;
     }
 
     function themePresetByName(name) {
@@ -918,8 +1033,11 @@ PanelWindow {
         settingsApplyingStored = true;
         currentThemeName = settingsStore.themeName;
         themeMode = settingsStore.themeMode === "light" ? "light" : "dark";
+        dynamicThemeEnabled = settingsStore.dynamicThemeEnabled;
+        dynamicThemeColors = settingsStore.dynamicThemeColors || ({});
         var preset = themePresetByName(currentThemeName);
-        if (preset) applyThemePreset(preset);
+        if (dynamicThemeEnabled && dynamicThemeColors.base) applyDynamicTheme();
+        else if (preset) applyThemePreset(preset);
         if (settingsStore.wallpaperPath.length > 0) hyprWallpaperPath = settingsStore.wallpaperPath;
         wallpaperDirectories = settingsStore.wallpaperDirectories;
         wallpaperDirectoryInput = wallpaperDirectories.length > 0 ? wallpaperDirectories[0] : "/home/sado/Pictures/wallpapers";
@@ -953,6 +1071,8 @@ PanelWindow {
         settingsStore.doNotDisturb = notificationsDnd;
         settingsStore.focusModeEnabled = focusModeEnabled;
         settingsStore.mediaHiddenInFocus = mediaHiddenInFocus;
+        settingsStore.dynamicThemeEnabled = dynamicThemeEnabled;
+        settingsStore.dynamicThemeColors = dynamicThemeColors;
         settingsStore.powerProfile = powerProfile;
         settingsStore.rememberedVolumePercent = volumePercent;
         settingsStore.rememberedBrightnessPercent = quickBrightnessPercent;
@@ -1572,6 +1692,29 @@ PanelWindow {
         }
         onExited: function(exitCode) {
             if (exitCode !== 0) wallpaperBrowserStatus = "Scan failed";
+        }
+    }
+
+    Process {
+        id: dynamicThemeProc
+        command: ["sh", "-c", "true"]
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                var match = text.trim().match(/#[0-9A-Fa-f]{6}/);
+                if (!match) {
+                    dynamicThemeStatus = "No color";
+                    return;
+                }
+
+                dynamicThemeColors = { "base": match[0] };
+                applyDynamicTheme();
+                dynamicThemeStatus = "Wallpaper color " + match[0];
+                persistSettings();
+            }
+        }
+        onExited: function(exitCode) {
+            if (exitCode !== 0) dynamicThemeStatus = exitCode === 127 ? "Missing magick/matugen" : "Color failed";
         }
     }
 

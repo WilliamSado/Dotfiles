@@ -29,6 +29,11 @@ Item {
     property bool rememberedSourceMuted: false
     property bool focusModeEnabled: false
     property bool mediaHiddenInFocus: true
+    property bool dynamicThemeEnabled: false
+    property var dynamicThemeColors: ({})
+    property var recentLauncherApps: []
+    property bool focusDimNotifications: false
+    property string captureLastPath: ""
 
     signal loaded()
     signal saved()
@@ -65,7 +70,12 @@ Item {
             "rememberedMuted": rememberedMuted,
             "rememberedSourceMuted": rememberedSourceMuted,
             "focusModeEnabled": focusModeEnabled,
-            "mediaHiddenInFocus": mediaHiddenInFocus
+            "mediaHiddenInFocus": mediaHiddenInFocus,
+            "dynamicThemeEnabled": dynamicThemeEnabled,
+            "dynamicThemeColors": dynamicThemeColors,
+            "recentLauncherApps": recentLauncherApps,
+            "focusDimNotifications": focusDimNotifications,
+            "captureLastPath": captureLastPath
         };
 
         var text = JSON.stringify(data, null, 2);
@@ -105,6 +115,11 @@ Item {
                     if (data.rememberedSourceMuted !== undefined) root.rememberedSourceMuted = data.rememberedSourceMuted;
                     if (data.focusModeEnabled !== undefined) root.focusModeEnabled = data.focusModeEnabled;
                     if (data.mediaHiddenInFocus !== undefined) root.mediaHiddenInFocus = data.mediaHiddenInFocus;
+                    if (data.dynamicThemeEnabled !== undefined) root.dynamicThemeEnabled = data.dynamicThemeEnabled;
+                    if (data.dynamicThemeColors !== undefined) root.dynamicThemeColors = data.dynamicThemeColors;
+                    if (data.recentLauncherApps !== undefined && data.recentLauncherApps.length !== undefined) root.recentLauncherApps = data.recentLauncherApps;
+                    if (data.focusDimNotifications !== undefined) root.focusDimNotifications = data.focusDimNotifications;
+                    if (data.captureLastPath !== undefined) root.captureLastPath = data.captureLastPath;
                 } catch (error) {
                     console.warn("Could not parse quickshell settings:", error);
                 }
