@@ -928,6 +928,7 @@ Item {
         } else if (item.action === "windows") {
             root.bar.controlCenterPage = "windows";
             refreshWindows();
+            Qt.callLater(function() { windowSearch.forceActiveFocus(); });
         } else if (item.action === "scratch") {
             root.bar.controlCenterPage = "scratch";
             refreshWindows();
@@ -1004,7 +1005,7 @@ Item {
         relativeX: Math.max(root.bar.barSideMargin, root.bar.width - implicitWidth - root.bar.barSideMargin)
         relativeY: root.bar.implicitHeight + 22
         color: "transparent"
-        grabFocus: root.bar.controlCenterOpen && (root.bar.controlCenterPage === "launcher" || root.bar.controlCenterPage === "todo" || root.bar.controlCenterPage === "clipboard" || root.bar.controlCenterPage === "keybinds")
+        grabFocus: root.bar.controlCenterOpen && (root.bar.controlCenterPage === "launcher" || root.bar.controlCenterPage === "todo" || root.bar.controlCenterPage === "clipboard" || root.bar.controlCenterPage === "windows" || root.bar.controlCenterPage === "keybinds")
         onClosed: root.bar.closeControlCenter()
         onVisibleChanged: {
             if (visible && root.bar.controlCenterPage === "launcher") {
@@ -1017,7 +1018,10 @@ Item {
                 root.refreshClipboard();
                 Qt.callLater(function() { clipboardSearch.forceActiveFocus(); });
             }
-            if (visible && root.bar.controlCenterPage === "windows") root.refreshWindows();
+            if (visible && root.bar.controlCenterPage === "windows") {
+                root.refreshWindows();
+                Qt.callLater(function() { windowSearch.forceActiveFocus(); });
+            }
             if (visible && root.bar.controlCenterPage === "scratch") root.refreshWindows();
             if (visible && root.bar.controlCenterPage === "capture") root.refreshCaptureTools();
             if (visible && root.bar.controlCenterPage === "vpn") root.refreshVpn();
@@ -1152,7 +1156,10 @@ Item {
                                         root.refreshClipboard();
                                         Qt.callLater(function() { clipboardSearch.forceActiveFocus(); });
                                     }
-                                    if (modelData.key === "windows") root.refreshWindows();
+                                    if (modelData.key === "windows") {
+                                        root.refreshWindows();
+                                        Qt.callLater(function() { windowSearch.forceActiveFocus(); });
+                                    }
                                     if (modelData.key === "scratch") root.refreshWindows();
                                     if (modelData.key === "capture") root.refreshCaptureTools();
                                     if (modelData.key === "vpn") root.refreshVpn();
@@ -1404,7 +1411,7 @@ Item {
                         Text {
                             width: parent.width
                             visible: root.visibleWindowItems().length === 0
-                            text: root.windowStatus
+                            text: root.windowQuery.length > 0 ? "No matching windows" : root.windowStatus
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 13
@@ -1440,6 +1447,56 @@ Item {
                                         anchors.fill: parent
                                         onClicked: root.windowFilter = modelData.key
                                     }
+                                }
+                            }
+                        }
+
+                        Rectangle {
+                            width: parent.width
+                            height: 38
+                            radius: 17
+                            color: root.bar.pillColor
+                            border.color: windowSearch.activeFocus ? root.bar.networkTextColor : "transparent"
+                            border.width: windowSearch.activeFocus ? 1 : 0
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 10
+                                spacing: 8
+
+                                Text {
+                                    text: ""
+                                    color: root.bar.mutedTextColor
+                                    font.family: root.bar.iconFont
+                                    font.pixelSize: 13
+                                    Layout.alignment: Qt.AlignVCenter
+                                }
+
+                                TextInput {
+                                    id: windowSearch
+                                    Layout.fillWidth: true
+                                    Layout.alignment: Qt.AlignVCenter
+                                    text: root.windowQuery
+                                    color: root.bar.textColor
+                                    selectionColor: root.bar.activePillColor
+                                    selectedTextColor: root.bar.textColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 12
+                                    clip: true
+                                    onTextChanged: root.windowQuery = text
+                                    Keys.onEscapePressed: {
+                                        if (root.windowQuery.length > 0) root.windowQuery = "";
+                                        else root.bar.closeControlCenter();
+                                    }
+                                }
+
+                                Text {
+                                    text: root.visibleWindowItems().length + "/" + root.windowItems.length
+                                    color: root.bar.mutedTextColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 10
+                                    Layout.alignment: Qt.AlignVCenter
                                 }
                             }
                         }
