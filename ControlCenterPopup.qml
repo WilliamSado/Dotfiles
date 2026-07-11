@@ -154,6 +154,15 @@ Item {
         return count;
     }
 
+    function todoDoneCount() {
+        var count = 0;
+        var items = root.bar.todoItems || [];
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].done) count++;
+        }
+        return count;
+    }
+
     function addTodo() {
         var text = todoInput.trim();
         if (text.length === 0) return;
@@ -191,6 +200,20 @@ Item {
         root.bar.todoItems = items;
         root.bar.persistSettings();
         root.bar.showToast("󰄱", "Todo", "Deleted", "info", -1, 1000);
+    }
+
+    function clearCompletedTodos() {
+        var items = root.bar.todoItems || [];
+        var next = [];
+        var removed = 0;
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].done) removed++;
+            else next.push(items[i]);
+        }
+        if (removed === 0) return;
+        root.bar.todoItems = next;
+        root.bar.persistSettings();
+        root.bar.showToast("󰄱", "Todo", "Cleared " + removed + " completed", "success", -1, 1200);
     }
 
     function clipboardPreview(line) {
@@ -2023,6 +2046,29 @@ Item {
                                 font.family: root.bar.barFont
                                 font.pixelSize: 12
                                 Layout.alignment: Qt.AlignVCenter
+                            }
+
+                            Rectangle {
+                                Layout.preferredWidth: 86
+                                Layout.preferredHeight: 28
+                                radius: 14
+                                opacity: root.todoDoneCount() > 0 ? 1 : 0.45
+                                color: clearDoneTodoMouse.containsMouse && root.todoDoneCount() > 0 ? root.bar.activePillColor : root.bar.pillColor
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Clear done"
+                                    color: root.bar.textColor
+                                    font.family: root.bar.barFont
+                                    font.pixelSize: 10
+                                }
+
+                                MouseArea {
+                                    id: clearDoneTodoMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: root.clearCompletedTodos()
+                                }
                             }
                         }
 
