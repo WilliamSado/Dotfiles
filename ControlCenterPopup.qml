@@ -1196,7 +1196,7 @@ Item {
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: root.pageTitle() + " page"
+                            text: root.pageTitle() + " " + root.bar.tr("control.page", "page")
                             color: root.bar.textColor
                             font.family: root.bar.barFont
                             font.pixelSize: 14
@@ -1204,7 +1204,7 @@ Item {
 
                         Text {
                             anchors.horizontalCenter: parent.horizontalCenter
-                            text: "功能会逐步接入"
+                            text: root.bar.tr("control.comingSoon", "More functions will be added")
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 12
@@ -1376,7 +1376,7 @@ Item {
                             }
 
                             Text {
-                                text: root.windowFilter === "current" ? root.visibleWindowItems().length + " current" : root.windowStatus
+                                text: root.windowFilter === "current" ? root.visibleWindowItems().length + " " + root.bar.tr("control.current", "current") : root.windowStatus
                                 color: root.bar.mutedTextColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 12
@@ -1393,7 +1393,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Refresh"
+                                    text: root.bar.tr("common.refresh", "Refresh")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -1411,7 +1411,7 @@ Item {
                         Text {
                             width: parent.width
                             visible: root.visibleWindowItems().length === 0
-                            text: root.windowQuery.length > 0 ? "No matching windows" : root.windowStatus
+                            text: root.windowQuery.length > 0 ? root.bar.tr("control.noMatchingWindows", "No matching windows") : root.windowStatus
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 13
@@ -1425,8 +1425,8 @@ Item {
 
                             Repeater {
                                 model: [
-                                    { key: "all", label: "All" },
-                                    { key: "current", label: "Current" }
+                                    { key: "all", label: root.bar.tr("control.all", "All") },
+                                    { key: "current", label: root.bar.tr("control.current", "Current") }
                                 ]
 
                                 Rectangle {
@@ -1891,11 +1891,11 @@ Item {
 
                             Repeater {
                                 model: [
-                                    { icon: "󰹑", label: "Fullscreen", sub: "Save + copy", action: "fullscreen", active: false },
-                                    { icon: "󰆞", label: "Region", sub: "Select area", action: "region", active: false },
-                                    { icon: "󰖯", label: "Window", sub: "Active window", action: "window", active: false },
-                                    { icon: root.recording ? "" : "󰑊", label: root.recording ? "Stop recording" : "Record region", sub: root.recording ? "wf-recorder" : "Select area", action: "record", active: root.recording },
-                                    { icon: "", label: "Color picker", sub: "Copy color", action: "color", active: false }
+                                    { icon: "󰹑", label: root.bar.tr("capture.fullscreen", "Fullscreen"), sub: root.bar.tr("capture.saveCopy", "Save + copy"), action: "fullscreen", active: false },
+                                    { icon: "󰆞", label: root.bar.tr("capture.region", "Region"), sub: root.bar.tr("capture.selectArea", "Select area"), action: "region", active: false },
+                                    { icon: "󰖯", label: root.bar.tr("capture.window", "Window"), sub: root.bar.tr("capture.activeWindow", "Active window"), action: "window", active: false },
+                                    { icon: root.recording ? "" : "󰑊", label: root.recording ? root.bar.tr("capture.stopRecording", "Stop recording") : root.bar.tr("capture.recordRegion", "Record region"), sub: root.recording ? "wf-recorder" : root.bar.tr("capture.selectArea", "Select area"), action: "record", active: root.recording },
+                                    { icon: "", label: root.bar.tr("capture.colorPicker", "Color picker"), sub: root.bar.tr("capture.copyColor", "Copy color"), action: "color", active: false }
                                 ]
 
                                 Rectangle {
@@ -1936,7 +1936,7 @@ Item {
 
                                             Text {
                                                 width: parent.width
-                                                text: actionEnabled ? modelData.sub : "missing tool"
+                                                text: actionEnabled ? modelData.sub : root.bar.tr("capture.missingTool", "missing tool")
                                                 color: root.bar.mutedTextColor
                                                 font.family: root.bar.barFont
                                                 font.pixelSize: 11
@@ -2110,7 +2110,7 @@ Item {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "Add"
+                                        text: root.bar.tr("todo.add", "Add")
                                         color: root.bar.textColor
                                         font.family: root.bar.barFont
                                         font.pixelSize: 11
@@ -2132,7 +2132,7 @@ Item {
                             spacing: 8
 
                             Text {
-                                text: root.todoRemaining() + " active"
+                                text: root.todoRemaining() + " " + root.bar.tr("todo.active", "active")
                                 color: root.bar.mutedTextColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 12
@@ -2141,7 +2141,7 @@ Item {
                             }
 
                             Text {
-                                text: (root.bar.todoItems || []).length + " total"
+                                text: (root.bar.todoItems || []).length + " " + root.bar.tr("todo.total", "total")
                                 color: root.bar.mutedTextColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 12
@@ -2157,7 +2157,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Clear done"
+                                    text: root.bar.tr("todo.clearDone", "Clear done")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 10
@@ -2175,7 +2175,7 @@ Item {
                         Text {
                             width: parent.width
                             visible: (root.bar.todoItems || []).length === 0
-                            text: "No tasks yet"
+                            text: root.bar.tr("todo.empty", "No tasks yet")
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 13
@@ -2323,7 +2323,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Refresh"
+                                    text: root.bar.tr("common.refresh", "Refresh")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -2345,7 +2345,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Clear"
+                                    text: root.bar.tr("quick.clear", "Clear")
                                     color: root.bar.mutedTextColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -2413,7 +2413,7 @@ Item {
                         Text {
                             width: parent.width
                             visible: root.filteredClipboardItems().length === 0
-                            text: root.clipboardItems.length === 0 ? (root.clipboardStatus === "Ready" ? "No clipboard history" : root.clipboardStatus) : "No matching clipboard items"
+                            text: root.clipboardItems.length === 0 ? (root.clipboardStatus === "Ready" ? root.bar.tr("clipboard.empty", "No clipboard history") : root.clipboardStatus) : root.bar.tr("clipboard.noMatch", "No matching clipboard items")
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 13
@@ -2507,7 +2507,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.maintenanceBusy ? "Busy" : "Refresh"
+                                    text: root.maintenanceBusy ? root.bar.tr("common.busy", "Busy") : root.bar.tr("common.refresh", "Refresh")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -2580,7 +2580,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            text: "升级会在终端中执行；清理缓存优先使用 paccache -rk2"
+                            text: root.bar.tr("maintenance.hint", "Upgrades run in terminal; cache cleanup prefers paccache -rk2")
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 11
@@ -3077,7 +3077,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.vpnBusy ? "Busy" : "Refresh"
+                                    text: root.vpnBusy ? root.bar.tr("common.busy", "Busy") : root.bar.tr("common.refresh", "Refresh")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -3095,7 +3095,7 @@ Item {
                         Text {
                             width: parent.width
                             visible: root.vpnItems.length === 0
-                            text: root.vpnStatus === "Ready" ? "No VPN profiles" : root.vpnStatus
+                            text: root.vpnStatus === "Ready" ? root.bar.tr("vpn.empty", "No VPN profiles") : root.vpnStatus
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 13
@@ -3154,7 +3154,7 @@ Item {
 
                                                 Text {
                                                     width: parent.width
-                                                    text: modelData.active ? "Active" + (modelData.device.length > 0 ? " · " + modelData.device : "") : "Disconnected"
+                                                    text: modelData.active ? root.bar.tr("vpn.active", "Active") + (modelData.device.length > 0 ? " · " + modelData.device : "") : root.bar.tr("vpn.disconnected", "Disconnected")
                                                     color: root.bar.mutedTextColor
                                                     font.family: root.bar.barFont
                                                     font.pixelSize: 10
@@ -3163,7 +3163,7 @@ Item {
                                             }
 
                                             Text {
-                                                text: modelData.active ? "Down" : "Up"
+                                                text: modelData.active ? root.bar.tr("vpn.down", "Down") : root.bar.tr("vpn.up", "Up")
                                                 color: root.bar.mutedTextColor
                                                 font.family: root.bar.barFont
                                                 font.pixelSize: 11
@@ -3193,7 +3193,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            text: "Focus Mode"
+                            text: root.bar.tr("focus.title", "Focus Mode")
                             color: root.bar.textColor
                             font.family: root.bar.barFont
                             font.pixelSize: 15
@@ -3201,7 +3201,7 @@ Item {
 
                         Text {
                             width: parent.width
-                            text: root.bar.focusModeEnabled ? "勿扰已开启，媒体胶囊按设置隐藏" : "开启后会启用勿扰，并可隐藏媒体胶囊"
+                            text: root.bar.focusModeEnabled ? root.bar.tr("focus.enabledHint", "DND is enabled; media pill follows the setting below") : root.bar.tr("focus.disabledHint", "Enable DND and optionally hide the media pill")
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 12
@@ -3214,7 +3214,7 @@ Item {
                             spacing: 10
 
                             Text {
-                                text: "专注计时"
+                                text: root.bar.tr("focus.timer", "Focus timer")
                                 color: root.bar.textColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 13
@@ -3278,7 +3278,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.bar.focusTimerRunning ? "Stop" : "Start"
+                                    text: root.bar.focusTimerRunning ? root.bar.tr("common.stop", "Stop") : root.bar.tr("common.start", "Start")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 12
@@ -3302,7 +3302,7 @@ Item {
                             spacing: 10
 
                             Text {
-                                text: "勿扰模式"
+                                text: root.bar.tr("focus.dnd", "Do not disturb")
                                 color: root.bar.textColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 13
@@ -3318,7 +3318,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.bar.focusModeEnabled ? "On" : "Off"
+                                    text: root.bar.focusModeEnabled ? root.bar.tr("common.on", "On") : root.bar.tr("common.off", "Off")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 12
@@ -3337,7 +3337,7 @@ Item {
                             spacing: 10
 
                             Text {
-                                text: "隐藏媒体胶囊"
+                                text: root.bar.tr("focus.hideMedia", "Hide media pill")
                                 color: root.bar.textColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 13
@@ -3353,7 +3353,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.bar.mediaHiddenInFocus ? "On" : "Off"
+                                    text: root.bar.mediaHiddenInFocus ? root.bar.tr("common.on", "On") : root.bar.tr("common.off", "Off")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 12
@@ -3372,7 +3372,7 @@ Item {
                             spacing: 10
 
                             Text {
-                                text: "降低通知强调度"
+                                text: root.bar.tr("focus.dimNotifications", "Dim notifications")
                                 color: root.bar.textColor
                                 font.family: root.bar.barFont
                                 font.pixelSize: 13
@@ -3388,7 +3388,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: root.bar.focusDimNotifications ? "On" : "Off"
+                                    text: root.bar.focusDimNotifications ? root.bar.tr("common.on", "On") : root.bar.tr("common.off", "Off")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 12
