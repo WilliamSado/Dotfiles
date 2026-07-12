@@ -65,7 +65,7 @@ Item {
             width: parent.width
             y: root.bar.hyprSettingsOpen ? 0 : -root.bar.popupAnimationOffset
             opacity: root.bar.hyprSettingsOpen ? 1 : 0
-            scale: root.bar.hyprSettingsOpen ? 1 : 0.86
+            scale: root.bar.hyprSettingsOpen ? 1 : 0.92
             transformOrigin: Item.Top
             implicitHeight: hyprSettingsColumn.implicitHeight + 28
             radius: 18
@@ -73,9 +73,9 @@ Item {
             border.color: root.bar.popupBorderColor
             border.width: 1
 
-            Behavior on y { SpringAnimation { spring: 5.0; damping: 0.24; epsilon: 0.12 } }
-            Behavior on opacity { NumberAnimation { duration: Math.max(130, root.bar.popupAnimationMs - 50); easing.type: Easing.OutCubic } }
-            Behavior on scale { SpringAnimation { spring: 5.4; damping: 0.25; epsilon: 0.001 } }
+            Behavior on y { SpringAnimation { spring: 4.0; damping: 0.42; epsilon: 0.16 } }
+            Behavior on opacity { NumberAnimation { duration: Math.max(120, root.bar.popupAnimationMs - 50); easing.type: Easing.OutCubic } }
+            Behavior on scale { SpringAnimation { spring: 4.2; damping: 0.44; epsilon: 0.001 } }
 
             Column {
                 id: hyprSettingsColumn
