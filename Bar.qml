@@ -156,7 +156,6 @@ PanelWindow {
     property string captureLastPath: ""
     property string captureStatus: "Ready"
     property string capturePendingPath: ""
-    property string captureSelectedArea: ""
     property bool controlCenterCaptureBusy: false
     property var notificationHistory: []
     property int unreadNotifications: 0
@@ -727,11 +726,14 @@ PanelWindow {
     function runRegionCapture(path) {
         captureStatus = "Selecting region";
         capturePendingPath = path || "";
-        captureSelectedArea = "";
         closeControlCenter();
         showToast("", "Capture", captureStatus, "info", -1, 1200);
-        captureRegionProc.command = ["sh", "-c", "sleep " + (Math.max(popupAnimationMs + 160, 420) / 1000).toFixed(2) + "; slurp 2>/tmp/quickshell-capture.log"];
-        captureRegionProc.running = true;
+        if (path && path.length > 0) {
+            captureLastPath = path;
+            persistSettings();
+        }
+        regionCaptureLaunchProc.command = ["hyprctl", "dispatch", "exec", "sh /home/sado/.config/quickshell/scripts/capture-region.sh " + shellQuote(path) + " " + (Math.max(popupAnimationMs + 180, 480) / 1000).toFixed(2)];
+        regionCaptureLaunchProc.running = true;
     }
 
     function showToast(icon, title, message, level, progress, durationMs) {
@@ -1622,24 +1624,14 @@ PanelWindow {
     }
 
     Process {
-        id: captureRegionProc
+        id: regionCaptureLaunchProc
         command: ["sh", "-c", "true"]
-
-        stdout: StdioCollector {
-            waitForEnd: true
-            onStreamFinished: captureSelectedArea = String(text || "").trim();
-        }
-
         onExited: function(exitCode) {
-            if (exitCode !== 0 || captureSelectedArea.length === 0) {
-                captureStatus = "Region cancelled";
-                showToast("", "Capture", captureStatus + " · /tmp/quickshell-capture.log", "warning", -1, 1800);
-                capturePendingPath = "";
-                return;
+            if (exitCode !== 0) {
+                captureStatus = "Capture failed";
+                showToast("", "Capture", captureStatus + " · hyprctl dispatch failed", "error", -1, 1800);
             }
-
-            var path = capturePendingPath;
-            runCaptureCommand("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && grim -g " + shellQuote(captureSelectedArea) + " " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Region saved", path);
+            capturePendingPath = "";
         }
     }
 
