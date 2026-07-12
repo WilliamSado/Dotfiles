@@ -2499,11 +2499,30 @@ PanelWindow {
 
         // ============ 居中: 工作区 ============
         Rectangle {
+            id: workspacePill
+            property int activeWorkspaceId: Hyprland.focusedWorkspace?.id || 1
+            property int activeWorkspaceIndex: Math.max(0, Math.min(9, activeWorkspaceId - 1))
+
             Layout.preferredWidth: workspaceRow.implicitWidth + 10
             Layout.preferredHeight: pillHeight
             Layout.alignment: Qt.AlignVCenter
             radius: pillRadius
             color: sectionPillColor
+            clip: true
+
+            Rectangle {
+                id: activeWorkspaceBubble
+                width: 30
+                height: 30
+                radius: 15
+                x: workspaceRow.x + workspacePill.activeWorkspaceIndex * (30 + workspaceRow.spacing)
+                y: (workspacePill.height - height) / 2
+                color: activePillColor
+                visible: workspacePill.activeWorkspaceId >= 1 && workspacePill.activeWorkspaceId <= 10
+
+                Behavior on x { SpringAnimation { spring: 4.2; damping: 0.35; epsilon: 0.15 } }
+                Behavior on color { ColorAnimation { duration: Math.max(120, popupAnimationMs - 40); easing.type: Easing.OutCubic } }
+            }
 
             MouseArea {
                 anchors.fill: parent
@@ -2517,6 +2536,7 @@ PanelWindow {
                 id: workspaceRow
                 anchors.centerIn: parent
                 spacing: 8
+                z: 1
 
                 Repeater {
                     model: 10
@@ -2529,7 +2549,10 @@ PanelWindow {
                         width: 30
                         height: 30
                         radius: 15
-                        color: isActive ? activePillColor : "transparent"
+                        color: "transparent"
+                        scale: isActive ? 1 : 0.92
+
+                        Behavior on scale { SpringAnimation { spring: 4.6; damping: 0.38; epsilon: 0.001 } }
 
                         Text {
                             anchors.centerIn: parent
@@ -2537,6 +2560,8 @@ PanelWindow {
                             color: parent.isActive || parent.hasWindows ? textColor : mutedTextColor
                             font.family: barFont
                             font.pixelSize: barFontSize
+
+                            Behavior on color { ColorAnimation { duration: Math.max(100, popupAnimationMs - 60); easing.type: Easing.OutCubic } }
                         }
 
                         MouseArea {
