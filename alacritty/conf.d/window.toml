@@ -1,0 +1,6 @@
+[window]
+opacity = 0.45
+
+[window.padding]
+x = 24
+y = 16
