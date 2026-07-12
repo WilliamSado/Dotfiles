@@ -19,6 +19,7 @@ Rectangle {
     property color themePopupBorderColor: colors.popupBorderColor
     property color themeTextColor: colors.textColor
     property color themeAudioTextColor: colors.audioTextColor
+    property string noLyricsText: "No lyrics from player"
 
     readonly property var player: activePlayer()
     readonly property bool hasPlayer: player !== null && player !== undefined
@@ -904,7 +905,7 @@ Rectangle {
                         anchors.centerIn: parent
                         width: parent.width
                         visible: lyricList.count === 0
-                        text: "No lyrics from player"
+                        text: root.noLyricsText
                         color: colors.musicLyricLowlightColor
                         font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: numbers.musicLyricInactiveFontSize

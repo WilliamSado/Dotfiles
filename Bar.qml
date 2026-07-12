@@ -719,7 +719,7 @@ PanelWindow {
         captureStatus = status || "Running";
         capturePendingPath = path || "";
         closeControlCenter();
-        showToast("", "Capture", captureStatus, "info", -1, 1200);
+        showToast("", tr("capture.title", "Capture"), captureStatus, "info", -1, 1200);
         captureProc.command = ["sh", "-c", "sleep " + (Math.max(popupAnimationMs + 140, 360) / 1000).toFixed(2) + "; " + command + " 2>/tmp/quickshell-capture.log"];
         captureProc.running = true;
     }
@@ -728,7 +728,7 @@ PanelWindow {
         captureStatus = "Selecting region";
         capturePendingPath = path || "";
         closeControlCenter();
-        showToast("", "Capture", captureStatus, "info", -1, 1200);
+        showToast("", tr("capture.title", "Capture"), captureStatus, "info", -1, 1200);
         if (path && path.length > 0) {
             captureLastPath = path;
             persistSettings();
@@ -876,7 +876,7 @@ PanelWindow {
     function applyMonitorMode(mode) {
         if (!hyprMonitorName || hyprMonitorName === "Unknown") {
             hyprStatusText = "No active monitor";
-            showToast("󰍹", "Display", hyprStatusText, "warning", -1, 1800);
+            showToast("󰍹", tr("settings.display", "Display"), hyprStatusText, "warning", -1, 1800);
             return;
         }
 
@@ -892,13 +892,13 @@ PanelWindow {
     function applyMonitorRefresh(rate) {
         if (!hyprMonitorName || hyprMonitorName === "Unknown") {
             hyprStatusText = "No active monitor";
-            showToast("󰍹", "Display", hyprStatusText, "warning", -1, 1800);
+            showToast("󰍹", tr("settings.display", "Display"), hyprStatusText, "warning", -1, 1800);
             return;
         }
 
         if (!hyprMonitorResolution || hyprMonitorResolution === "preferred") {
             hyprStatusText = "No active resolution";
-            showToast("󰍹", "Display", hyprStatusText, "warning", -1, 1800);
+            showToast("󰍹", tr("settings.display", "Display"), hyprStatusText, "warning", -1, 1800);
             return;
         }
 
@@ -910,7 +910,7 @@ PanelWindow {
     function applyMonitorScale(scale) {
         if (!hyprMonitorName || hyprMonitorName === "Unknown") {
             hyprStatusText = "No active monitor";
-            showToast("󰍹", "Display", hyprStatusText, "warning", -1, 1800);
+            showToast("󰍹", tr("settings.display", "Display"), hyprStatusText, "warning", -1, 1800);
             return;
         }
 
@@ -922,7 +922,7 @@ PanelWindow {
         hyprWallpaperPath = cleanInputPath(hyprWallpaperPath);
         if (hyprWallpaperPath.length === 0) {
             hyprStatusText = "Wallpaper path is empty";
-            showToast("󰸉", "Wallpaper", hyprStatusText, "warning", -1, 1800);
+            showToast("󰸉", tr("settings.wallpaper", "Wallpaper"), hyprStatusText, "warning", -1, 1800);
             return;
         }
 
@@ -982,7 +982,7 @@ PanelWindow {
         var tone = themeTone(preset);
         applyThemeTone(tone);
         persistSettings();
-        showToast("󰔎", "Theme", currentThemeName + " · " + themeMode, "success", -1, 1600);
+        showToast("󰔎", tr("settings.tab.theme", "Theme"), currentThemeName + " · " + themeMode, "success", -1, 1600);
     }
 
     function applyThemeTone(tone) {
@@ -1113,12 +1113,12 @@ PanelWindow {
         var path = cleanInputPath(hyprWallpaperPath);
         if (path.length === 0) {
             dynamicThemeStatus = "No wallpaper";
-            showToast("󰸉", "Wallpaper Theme", dynamicThemeStatus, "warning", -1, 1600);
+            showToast("󰸉", tr("settings.wallpaperThemeOn", "Wallpaper theme on"), dynamicThemeStatus, "warning", -1, 1600);
             return;
         }
 
         dynamicThemeStatus = "Reading wallpaper";
-        showToast("󰔎", "Wallpaper Theme", "Reading color", "info", -1, 1200);
+        showToast("󰔎", tr("settings.wallpaperThemeOn", "Wallpaper theme on"), tr("toast.readingColor", "Reading color"), "info", -1, 1200);
         dynamicThemeProc.command = ["sh", "-c", "path=" + shellQuote(path) + "; if command -v magick >/dev/null 2>&1; then magick \"$path\" -resize '1x1!' -format '#%[hex:p{0,0}]' info:; elif command -v convert >/dev/null 2>&1; then convert \"$path\" -resize '1x1!' -format '#%[hex:p{0,0}]' info:; elif command -v matugen >/dev/null 2>&1; then matugen image \"$path\" --json hex 2>/dev/null | sed -n 's/.*\"primary\"[[:space:]]*:[[:space:]]*\"\\(#[0-9A-Fa-f]*\\)\".*/\\1/p' | head -n 1; else exit 127; fi"];
         dynamicThemeProc.running = true;
     }
@@ -1256,7 +1256,7 @@ PanelWindow {
         if (wallpaperFiles.length === 0) {
             refreshWallpapers();
             wallpaperBrowserStatus = "No wallpapers to rotate";
-            showToast("󰸉", "Wallpaper Rotate", wallpaperBrowserStatus, "warning", -1, 1600);
+            showToast("󰸉", tr("settings.nextWallpaper", "Next wallpaper"), wallpaperBrowserStatus, "warning", -1, 1600);
             return;
         }
 
@@ -1271,7 +1271,7 @@ PanelWindow {
 
         wallpaperRotationIndex = nextIndex + 1;
         selectWallpaper(wallpaperFiles[nextIndex]);
-        showToast("󰸉", "Wallpaper Rotate", wallpaperFiles[nextIndex].replace(/^.*\//, ""), "success", -1, 1600);
+        showToast("󰸉", tr("settings.nextWallpaper", "Next wallpaper"), wallpaperFiles[nextIndex].replace(/^.*\//, ""), "success", -1, 1600);
     }
 
     function setWallpaperRotationEnabled(enabled) {
@@ -1283,13 +1283,13 @@ PanelWindow {
         } else {
             wallpaperRotationTimer.stop();
         }
-        showToast("󰸉", "Wallpaper Rotate", enabled ? "Enabled" : "Disabled", enabled ? "success" : "info", -1, 1400);
+        showToast("󰸉", tr("settings.nextWallpaper", "Next wallpaper"), enabled ? tr("toast.enabled", "Enabled") : tr("toast.disabled", "Disabled"), enabled ? "success" : "info", -1, 1400);
     }
 
     function toggleWallpaperRotationRandom() {
         wallpaperRotationRandom = !wallpaperRotationRandom;
         persistSettings();
-        showToast("󰸉", "Wallpaper Rotate", wallpaperRotationRandom ? "Random" : "Sequential", "info", -1, 1200);
+        showToast("󰸉", tr("settings.nextWallpaper", "Next wallpaper"), wallpaperRotationRandom ? tr("settings.random", "Random") : tr("settings.sequence", "Sequence"), "info", -1, 1200);
     }
 
     function adjustWallpaperRotationMinutes(delta) {
@@ -1301,7 +1301,7 @@ PanelWindow {
     function setPowerProfile(profile) {
         powerProfile = profile;
         powerProfileStatus = "Applying";
-        showToast("󰓅", "Power Profile", profile, "info", -1, 1300);
+        showToast("󰓅", tr("quick.powerMode", "Power mode"), profile, "info", -1, 1300);
         persistSettings();
         powerProfileProc.command = ["powerprofilesctl", "set", profile];
         powerProfileProc.running = true;
@@ -1352,7 +1352,7 @@ PanelWindow {
     function toggleDoNotDisturb() {
         notificationsDnd = !notificationsDnd;
         persistSettings();
-        showToast(notificationsDnd ? "󰂛" : "", "Notifications", notificationsDnd ? "DND enabled" : "DND disabled", notificationsDnd ? "warning" : "success", -1, 1400);
+        showToast(notificationsDnd ? "󰂛" : "", tr("quick.notifications", "Notifications"), notificationsDnd ? tr("toast.dndEnabled", "DND enabled") : tr("toast.dndDisabled", "DND disabled"), notificationsDnd ? "warning" : "success", -1, 1400);
     }
 
     function setFocusMode(enabled) {
@@ -1372,7 +1372,7 @@ PanelWindow {
 
         focusModeEnabled = enabled;
         persistSettings();
-        showToast("󰒲", "Focus Mode", enabled ? "Enabled" : "Disabled", enabled ? "success" : "info", -1, 1500);
+        showToast("󰒲", tr("focus.title", "Focus Mode"), enabled ? tr("toast.enabled", "Enabled") : tr("toast.disabled", "Disabled"), enabled ? "success" : "info", -1, 1500);
     }
 
     function toggleFocusMode() {
@@ -1389,7 +1389,7 @@ PanelWindow {
         }
 
         persistSettings();
-        showToast("󰝟", "Media Pill", enabled ? "Hidden in focus" : "Visible in focus", "info", -1, 1400);
+        showToast("󰝟", tr("focus.hideMedia", "Hide media pill"), enabled ? tr("toast.hiddenInFocus", "Hidden in focus") : tr("toast.visibleInFocus", "Visible in focus"), "info", -1, 1400);
     }
 
     function toggleMediaHiddenInFocus() {
@@ -1399,7 +1399,7 @@ PanelWindow {
     function toggleFocusDimNotifications() {
         focusDimNotifications = !focusDimNotifications;
         persistSettings();
-        showToast("", "Focus Notifications", focusDimNotifications ? "Dimmed" : "Normal", "info", -1, 1400);
+        showToast("", tr("focus.dimNotifications", "Dim notifications"), focusDimNotifications ? tr("toast.dimmed", "Dimmed") : tr("toast.normal", "Normal"), "info", -1, 1400);
     }
 
     function focusTimerText() {
@@ -1421,14 +1421,14 @@ PanelWindow {
         focusTimerRunning = true;
         if (!focusModeEnabled) setFocusMode(true);
         focusTimerTick.restart();
-        showToast("󰒲", "Focus Timer", focusTimerMinutes + " minutes", "success", -1, 1500);
+        showToast("󰒲", tr("focus.timer", "Focus timer"), focusTimerMinutes + " minutes", "success", -1, 1500);
     }
 
     function stopFocusTimer() {
         focusTimerRunning = false;
         focusTimerRemainingSeconds = 0;
         focusTimerTick.stop();
-        showToast("󰒲", "Focus Timer", "Stopped", "info", -1, 1200);
+        showToast("󰒲", tr("focus.timer", "Focus timer"), tr("toast.stopped", "Stopped"), "info", -1, 1200);
     }
 
     function finishFocusTimer() {
@@ -1436,7 +1436,7 @@ PanelWindow {
         focusTimerRemainingSeconds = 0;
         focusTimerTick.stop();
         if (focusModeEnabled) setFocusMode(false);
-        showToast("󰒲", "Focus Timer", "Finished", "success", -1, 2400);
+        showToast("󰒲", tr("focus.timer", "Focus timer"), tr("toast.finished", "Finished"), "success", -1, 2400);
     }
 
     function setGameMode(enabled) {
@@ -1457,7 +1457,7 @@ PanelWindow {
             if (powerProfile !== "performance") setPowerProfile("performance");
             if (hyprBlurEnabled) toggleHyprBlur();
             persistSettings();
-            showToast("󰊴", "Game Mode", "Performance focus enabled", "success", -1, 1800);
+            showToast("󰊴", tr("quick.gameMode", "Game mode"), tr("toast.performanceFocusEnabled", "Performance focus enabled"), "success", -1, 1800);
             return;
         }
 
@@ -1470,7 +1470,7 @@ PanelWindow {
         if (restore.hyprBlurEnabled !== undefined && restore.hyprBlurEnabled !== hyprBlurEnabled) toggleHyprBlur();
         gameModeRestoreState = ({});
         persistSettings();
-        showToast("󰊴", "Game Mode", "Restored", "info", -1, 1600);
+        showToast("󰊴", tr("quick.gameMode", "Game mode"), tr("toast.restoredState", "Restored"), "info", -1, 1600);
     }
 
     function toggleGameMode() {
@@ -1496,23 +1496,23 @@ PanelWindow {
         var clamped = Math.max(1, Math.min(100, Math.round(percent)));
         quickBrightnessPercent = clamped;
         if (!settingsRestoring) persistSettings();
-        showToast("󰃠", "Brightness", clamped + "%", "info", clamped / 100, 1000);
+        showToast("󰃠", tr("quick.brightness", "Brightness"), clamped + "%", "info", clamped / 100, 1000);
         runQuickCommand("if command -v brightnessctl >/dev/null 2>&1 && ls /sys/class/backlight/* >/dev/null 2>&1; then brightnessctl set " + clamped + "%; elif command -v ddcutil >/dev/null 2>&1; then ddcutil setvcp 10 " + clamped + "; else exit 1; fi", "Brightness " + clamped + "%");
     }
 
     function toggleWifiRadio() {
-        showToast("", "WiFi", "Toggling radio", "info", -1, 1200);
+        showToast("", "WiFi", tr("toast.togglingRadio", "Toggling radio"), "info", -1, 1200);
         runQuickCommand("if command -v nmcli >/dev/null 2>&1; then state=$(nmcli radio wifi); [ \"$state\" = enabled ] && nmcli radio wifi off || nmcli radio wifi on; else exit 1; fi", "Toggling WiFi");
     }
 
     function toggleBluetoothRadio() {
         if (!Bluetooth.defaultAdapter) {
-            showToast("", "Bluetooth", "No adapter", "warning", -1, 1500);
+            showToast("", tr("settings.bluetooth", "Bluetooth"), tr("settings.noAdapter", "No adapter"), "warning", -1, 1500);
             return;
         }
 
         Bluetooth.defaultAdapter.enabled = !Bluetooth.defaultAdapter.enabled;
-        showToast("", "Bluetooth", Bluetooth.defaultAdapter.enabled ? "On" : "Off", Bluetooth.defaultAdapter.enabled ? "success" : "warning", -1, 1300);
+        showToast("", tr("settings.bluetooth", "Bluetooth"), Bluetooth.defaultAdapter.enabled ? tr("common.on", "On") : tr("common.off", "Off"), Bluetooth.defaultAdapter.enabled ? "success" : "warning", -1, 1300);
     }
 
     function openHyprSettingsFromQuickSettings() {
@@ -1612,13 +1612,13 @@ PanelWindow {
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 captureStatus = "Capture failed";
-                showToast("", "Capture", captureStatus + " · /tmp/quickshell-capture.log", "error", -1, 2200);
+                showToast("", tr("capture.title", "Capture"), captureStatus + " · /tmp/quickshell-capture.log", "error", -1, 2200);
             } else if (capturePendingPath.length > 0) {
                 captureLastPath = capturePendingPath;
                 persistSettings();
-                showToast("", "Capture", capturePendingPath.replace(/^.*\//, ""), "success", -1, 1700);
+                showToast("", tr("capture.title", "Capture"), capturePendingPath.replace(/^.*\//, ""), "success", -1, 1700);
             } else {
-                showToast("", "Capture", captureStatus, "success", -1, 1400);
+                showToast("", tr("capture.title", "Capture"), captureStatus, "success", -1, 1400);
             }
             capturePendingPath = "";
         }
@@ -1630,7 +1630,7 @@ PanelWindow {
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 captureStatus = "Capture failed";
-                showToast("", "Capture", captureStatus + " · hyprctl dispatch failed", "error", -1, 1800);
+                showToast("", tr("capture.title", "Capture"), captureStatus + " · hyprctl dispatch failed", "error", -1, 1800);
             }
             capturePendingPath = "";
         }
@@ -1815,7 +1815,7 @@ PanelWindow {
     function toggleMute() {
         volumeMuted = !volumeMuted;
         if (!settingsRestoring) persistSettings();
-        showToast(volumeMuted ? "󰝟" : "", "Sound", volumeMuted ? "Muted" : volumePercent + "%", volumeMuted ? "warning" : "info", volumeMuted ? 0 : volumePercent / 100, 1000);
+        showToast(volumeMuted ? "󰝟" : "", tr("audio.sound", "Sound"), volumeMuted ? tr("audio.muted", "Muted") : volumePercent + "%", volumeMuted ? "warning" : "info", volumeMuted ? 0 : volumePercent / 100, 1000);
         volMuteProc.running = true;
     }
 
@@ -1843,7 +1843,7 @@ PanelWindow {
     function setDefaultAudioSink(sink) {
         if (!sink) return;
 
-        showToast("", "Audio Output", audioSinkName(sink), "info", -1, 1400);
+        showToast("", tr("audio.output", "Audio Output"), audioSinkName(sink), "info", -1, 1400);
         audioDefaultProc.command = ["wpctl", "set-default", String(sink.id)];
         audioDefaultProc.running = true;
     }
@@ -1867,7 +1867,7 @@ PanelWindow {
 
     function setDefaultAudioSource(source) {
         if (!source) return;
-        showToast("", "Audio Input", audioSourceName(source), "info", -1, 1400);
+        showToast("", tr("audio.input", "Audio Input"), audioSourceName(source), "info", -1, 1400);
         audioInputDefaultProc.command = ["wpctl", "set-default", String(source.id)];
         audioInputDefaultProc.running = true;
     }
@@ -1876,7 +1876,7 @@ PanelWindow {
         var clamped = Math.max(0, Math.min(100, Math.round(percent)));
         sourcePercent = clamped;
         if (!settingsRestoring) persistSettings();
-        showToast("", "Microphone", clamped + "%", "info", clamped / 100, 1000);
+        showToast("", tr("audio.mic", "Microphone"), clamped + "%", "info", clamped / 100, 1000);
         audioInputSetProc.command = ["sh", "-c", "wpctl set-volume @DEFAULT_AUDIO_SOURCE@ " + (clamped / 100).toFixed(2)];
         audioInputSetProc.running = true;
     }
@@ -1884,7 +1884,7 @@ PanelWindow {
     function toggleSourceMute() {
         sourceMuted = !sourceMuted;
         if (!settingsRestoring) persistSettings();
-        showToast(sourceMuted ? "" : "", "Microphone", sourceMuted ? "Muted" : sourcePercent + "%", sourceMuted ? "warning" : "info", sourceMuted ? 0 : sourcePercent / 100, 1000);
+        showToast(sourceMuted ? "" : "", tr("audio.mic", "Microphone"), sourceMuted ? tr("audio.muted", "Muted") : sourcePercent + "%", sourceMuted ? "warning" : "info", sourceMuted ? 0 : sourcePercent / 100, 1000);
         audioInputMuteProc.running = true;
     }
 
@@ -1962,7 +1962,7 @@ PanelWindow {
     function setAppAudioVolume(stream, percent) {
         if (!stream || stream.id === undefined) return;
         var clamped = Math.max(0, Math.min(100, Math.round(percent)));
-        showToast("󰝚", stream.name || "App audio", clamped + "%", "info", clamped / 100, 900);
+        showToast("󰝚", stream.name || tr("audio.appMixer", "App audio"), clamped + "%", "info", clamped / 100, 900);
         if (stream.backend === "pactl") {
             appAudioSetProc.command = ["pactl", "set-sink-input-volume", String(stream.id), clamped + "%"];
         } else {
@@ -1978,7 +1978,7 @@ PanelWindow {
 
     function toggleAppAudioMute(stream) {
         if (!stream || stream.id === undefined) return;
-        showToast(stream.muted ? "󰝝" : "󰝟", stream.name || "App audio", stream.muted ? "Unmuting" : "Muting", "info", -1, 900);
+        showToast(stream.muted ? "󰝝" : "󰝟", stream.name || tr("audio.appMixer", "App audio"), stream.muted ? tr("toast.unmuting", "Unmuting") : tr("toast.muting", "Muting"), "info", -1, 900);
         if (stream.backend === "pactl") {
             appAudioMuteProc.command = ["pactl", "set-sink-input-mute", String(stream.id), "toggle"];
         } else {
@@ -2035,7 +2035,7 @@ PanelWindow {
         var clamped = Math.max(0, Math.min(100, Math.round(percent)));
         volumePercent = clamped;
         if (!settingsRestoring) persistSettings();
-        showToast(volumeIconText(), "Volume", clamped + "%", "info", clamped / 100, 1000);
+        showToast(volumeIconText(), tr("quick.sound", "Volume"), clamped + "%", "info", clamped / 100, 1000);
         volSetProc.command = ["sh", "-c", "wpctl set-volume @DEFAULT_AUDIO_SINK@ " + (clamped / 100).toFixed(2)];
         volSetProc.running = true;
     }
@@ -2044,7 +2044,7 @@ PanelWindow {
         var newVol = Math.max(0, Math.min(1.0, (volumePercent / 100) + delta));
         volumePercent = Math.round(newVol * 100);
         if (!settingsRestoring) persistSettings();
-        showToast(volumeIconText(), "Volume", volumePercent + "%", "info", volumePercent / 100, 1000);
+        showToast(volumeIconText(), tr("quick.sound", "Volume"), volumePercent + "%", "info", volumePercent / 100, 1000);
         volSetProc.command = ["sh", "-c", "wpctl set-volume @DEFAULT_AUDIO_SINK@ " + newVol.toFixed(2)];
         volSetProc.running = true;
     }
@@ -2189,14 +2189,14 @@ PanelWindow {
                 dynamicThemeColors = { "base": match[0] };
                 applyDynamicTheme();
                 dynamicThemeStatus = "Wallpaper color " + match[0];
-                showToast("󰔎", "Wallpaper Theme", match[0], "success", -1, 1600);
+                showToast("󰔎", tr("settings.wallpaperThemeOn", "Wallpaper theme on"), match[0], "success", -1, 1600);
                 persistSettings();
             }
         }
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 dynamicThemeStatus = exitCode === 127 ? "Missing magick/matugen" : "Color failed";
-                showToast("󰔎", "Wallpaper Theme", dynamicThemeStatus, "error", -1, 1800);
+                showToast("󰔎", tr("settings.wallpaperThemeOn", "Wallpaper theme on"), dynamicThemeStatus, "error", -1, 1800);
             }
         }
     }
@@ -2220,7 +2220,7 @@ PanelWindow {
         command: ["sh", "-c", "true"]
         onExited: function(exitCode) {
             powerProfileStatus = exitCode === 0 ? "Done" : "Failed";
-            showToast("󰓅", "Power Profile", exitCode === 0 ? powerProfile : "Failed", exitCode === 0 ? "success" : "error", -1, 1600);
+            showToast("󰓅", tr("quick.powerMode", "Power mode"), exitCode === 0 ? powerProfile : tr("common.failed", "Failed"), exitCode === 0 ? "success" : "error", -1, 1600);
             refreshPowerProfile();
         }
     }
@@ -2293,7 +2293,7 @@ PanelWindow {
         command: ["sh", "-c", "echo"]
         onExited: function(exitCode, exitStatus) {
             quickSettingsStatusText = exitCode === 0 ? "Done" : "Failed";
-            showToast("󰒓", "Quick Settings", quickSettingsStatusText, exitCode === 0 ? "success" : "error", -1, 1500);
+            showToast("󰒓", tr("control.title", "Quick Settings"), quickSettingsStatusText, exitCode === 0 ? "success" : "error", -1, 1500);
         }
     }
 
@@ -2588,6 +2588,7 @@ PanelWindow {
             themePopupBorderColor: popupBorderColor
             themeTextColor: textColor
             themeAudioTextColor: audioTextColor
+            noLyricsText: tr("music.noLyrics", "No lyrics from player")
         }
 
         // ============ 右侧区域 ============
@@ -3165,7 +3166,7 @@ PanelWindow {
                 Text {
                     width: parent.width
                     visible: !Bluetooth.defaultAdapter
-                    text: "No bluetooth adapter"
+                    text: tr("bar.bluetooth.noAdapter", "No bluetooth adapter")
                     color: mutedTextColor
                     font.family: barFont
                     font.pixelSize: 14
@@ -3175,7 +3176,7 @@ PanelWindow {
                 Text {
                     width: parent.width
                     visible: Bluetooth.defaultAdapter && !Bluetooth.defaultAdapter.enabled
-                    text: "Right click capsule to enable"
+                    text: tr("bar.bluetooth.enableHint", "Right click capsule to enable")
                     color: mutedTextColor
                     font.family: barFont
                     font.pixelSize: 14
@@ -3185,7 +3186,7 @@ PanelWindow {
                 Text {
                     width: parent.width
                     visible: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled && Bluetooth.defaultAdapter.devices.values.length === 0
-                    text: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.discovering ? "Scanning..." : "No devices"
+                    text: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.discovering ? tr("common.scanning", "Scanning") + "..." : tr("bar.bluetooth.noDevices", "No devices")
                     color: mutedTextColor
                     font.family: barFont
                     font.pixelSize: 14
@@ -3330,7 +3331,7 @@ PanelWindow {
                     }
 
                     Text {
-                        text: "Power"
+                        text: tr("bar.power", "Power")
                         color: textColor
                         font.family: barFont
                         font.pixelSize: 15
@@ -3350,7 +3351,7 @@ PanelWindow {
                     spacing: 7
 
                     Text {
-                        text: "Power profile"
+                        text: tr("bar.powerProfile", "Power profile")
                         color: mutedTextColor
                         font.family: barFont
                         font.pixelSize: 12
@@ -3628,7 +3629,7 @@ PanelWindow {
                         }
 
                         Text {
-                            text: "Output"
+                            text: tr("audio.output", "Output")
                             color: mutedTextColor
                             font.family: barFont
                             font.pixelSize: 13
@@ -3661,7 +3662,7 @@ PanelWindow {
                 Text {
                     width: parent.width
                     visible: audioOutputsExpanded && audioSinks().length === 0
-                    text: "No output devices"
+                    text: tr("audio.noOutputDevices", "No output devices")
                     color: mutedTextColor
                     font.family: barFont
                     font.pixelSize: 13
@@ -3833,7 +3834,7 @@ PanelWindow {
                         }
 
                         Text {
-                            text: "Input"
+                            text: tr("audio.input", "Input")
                             color: mutedTextColor
                             font.family: barFont
                             font.pixelSize: 13
@@ -3856,7 +3857,7 @@ PanelWindow {
                 Text {
                     width: parent.width
                     visible: audioInputsExpanded && audioSources().length === 0
-                    text: "No input devices"
+                    text: tr("audio.noInputDevices", "No input devices")
                     color: mutedTextColor
                     font.family: barFont
                     font.pixelSize: 13
@@ -3955,7 +3956,7 @@ PanelWindow {
                         }
 
                         Text {
-                            text: "App mixer"
+                            text: tr("audio.appMixer", "App mixer")
                             color: mutedTextColor
                             font.family: barFont
                             font.pixelSize: 13
@@ -4288,7 +4289,7 @@ PanelWindow {
                     spacing: 10
 
                     Text {
-                        text: "Interface"
+                        text: tr("bar.interface", "Interface")
                         color: mutedTextColor
                         font.family: barFont
                         font.pixelSize: 13
@@ -4339,7 +4340,7 @@ PanelWindow {
                     visible: networkSignalText(networkPopupColumn.device).length > 0
 
                     Text {
-                        text: "Signal"
+                        text: tr("bar.signal", "Signal")
                         color: mutedTextColor
                         font.family: barFont
                         font.pixelSize: 13
@@ -4390,7 +4391,7 @@ PanelWindow {
                         spacing: 8
 
                         Text {
-                            text: "Networks"
+                            text: tr("bar.networks", "Networks")
                             color: mutedTextColor
                             font.family: barFont
                             font.pixelSize: 13
@@ -4427,7 +4428,7 @@ PanelWindow {
                     Text {
                         width: parent.width
                         visible: !networkPopupColumn.device || networkPopupColumn.device.type !== DeviceType.Wifi
-                        text: "No WiFi device"
+                        text: tr("bar.noWifiDevice", "No WiFi device")
                         color: mutedTextColor
                         font.family: barFont
                         font.pixelSize: 13
@@ -4564,7 +4565,7 @@ PanelWindow {
 
                             Text {
                                 width: parent.width
-                                text: "Password for " + (wifiPasswordSsid || "network")
+                                text: tr("bar.passwordFor", "Password for ") + (wifiPasswordSsid || tr("settings.network", "Network"))
                                 color: textColor
                                 font.family: barFont
                                 font.pixelSize: 13
@@ -4612,7 +4613,7 @@ PanelWindow {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "Connect"
+                                        text: tr("common.connect", "Connect")
                                         color: networkTextColor
                                         font.family: barFont
                                         font.pixelSize: 12
@@ -4634,7 +4635,7 @@ PanelWindow {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "Cancel"
+                                        text: tr("common.cancel", "Cancel")
                                         color: mutedTextColor
                                         font.family: barFont
                                         font.pixelSize: 12
@@ -4713,7 +4714,7 @@ PanelWindow {
                     }
 
                     Text {
-                        text: "Notifications"
+                        text: tr("bar.notifications", "Notifications")
                         color: textColor
                         font.family: barFont
                         font.pixelSize: 15
@@ -4749,7 +4750,7 @@ PanelWindow {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "Clear"
+                            text: tr("common.clear", "Clear")
                             color: mutedTextColor
                             font.family: barFont
                             font.pixelSize: 12
@@ -4771,7 +4772,7 @@ PanelWindow {
                 Text {
                     width: parent.width
                     visible: notificationHistory.length === 0
-                    text: "No notifications"
+                    text: tr("bar.noNotifications", "No notifications")
                     color: mutedTextColor
                     font.family: barFont
                     font.pixelSize: 13
@@ -4954,7 +4955,7 @@ PanelWindow {
                     }
 
                     Text {
-                        text: "Performance"
+                        text: tr("bar.performance", "Performance")
                         color: textColor
                         font.family: barFont
                         font.pixelSize: 15
@@ -4970,7 +4971,7 @@ PanelWindow {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "Refresh"
+                            text: tr("common.refresh", "Refresh")
                             color: networkTextColor
                             font.family: barFont
                             font.pixelSize: 12

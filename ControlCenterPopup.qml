@@ -181,7 +181,7 @@ Item {
         root.bar.todoItems = items.slice(0, 40);
         todoInput = "";
         root.bar.persistSettings();
-        root.bar.showToast("󰄱", "Todo", "Added", "success", -1, 1200);
+        root.bar.showToast("󰄱", root.bar.tr("control.todoTitle", "Todo"), root.bar.tr("toast.added", "Added"), "success", -1, 1200);
     }
 
     function toggleTodo(index) {
@@ -195,7 +195,7 @@ Item {
         };
         root.bar.todoItems = items;
         root.bar.persistSettings();
-        root.bar.showToast("󰄱", "Todo", items[index].done ? "Completed" : "Restored", "info", -1, 1000);
+        root.bar.showToast("󰄱", root.bar.tr("control.todoTitle", "Todo"), items[index].done ? root.bar.tr("toast.completed", "Completed") : root.bar.tr("toast.restored", "Restored"), "info", -1, 1000);
     }
 
     function deleteTodo(index) {
@@ -204,7 +204,7 @@ Item {
         items.splice(index, 1);
         root.bar.todoItems = items;
         root.bar.persistSettings();
-        root.bar.showToast("󰄱", "Todo", "Deleted", "info", -1, 1000);
+        root.bar.showToast("󰄱", root.bar.tr("control.todoTitle", "Todo"), root.bar.tr("toast.deleted", "Deleted"), "info", -1, 1000);
     }
 
     function clearCompletedTodos() {
@@ -218,7 +218,7 @@ Item {
         if (removed === 0) return;
         root.bar.todoItems = next;
         root.bar.persistSettings();
-        root.bar.showToast("󰄱", "Todo", "Cleared " + removed + " completed", "success", -1, 1200);
+        root.bar.showToast("󰄱", root.bar.tr("control.todoTitle", "Todo"), root.bar.tr("todo.clearedCompleted", "Cleared completed") + ": " + removed, "success", -1, 1200);
     }
 
     function clipboardPreview(line) {
@@ -248,7 +248,7 @@ Item {
 
     function clearClipboard() {
         clipboardStatus = "Clearing";
-        root.bar.showToast("", "Clipboard", "Clearing history", "info", -1, 1200);
+        root.bar.showToast("", root.bar.tr("quick.clipboard", "Clipboard"), root.bar.tr("clipboard.clearing", "Clearing history"), "info", -1, 1200);
         clipboardClearProc.running = true;
     }
 
@@ -281,7 +281,7 @@ Item {
         var path = capturePath("screenshot", "png");
         if (!captureActionEnabled("fullscreen")) {
             captureStatus = "Missing tool";
-            root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
+            root.bar.showToast("", root.bar.tr("capture.title", "Capture"), captureStatus, "error", -1, 1600);
             return;
         }
         runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && grim " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Fullscreen saved", path);
@@ -291,7 +291,7 @@ Item {
         var path = capturePath("region", "png");
         if (!captureActionEnabled("region")) {
             captureStatus = "Missing tool";
-            root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
+            root.bar.showToast("", root.bar.tr("capture.title", "Capture"), captureStatus, "error", -1, 1600);
             return;
         }
         root.bar.runRegionCapture(path);
@@ -301,7 +301,7 @@ Item {
         var path = capturePath("window", "png");
         if (!captureActionEnabled("window")) {
             captureStatus = "Missing tool";
-            root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
+            root.bar.showToast("", root.bar.tr("capture.title", "Capture"), captureStatus, "error", -1, 1600);
             return;
         }
         runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && geom=$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"') && [ -n \"$geom\" ] && [ \"$geom\" != \"null,null nullxnull\" ] && grim -g \"$geom\" " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Window saved", path);
@@ -314,13 +314,13 @@ Item {
             root.bar.captureLastPath = recordingPath;
             root.bar.persistSettings();
             captureStatus = "Recording stopped";
-            root.bar.showToast("󰑊", "Recording", "Stopped", "success", -1, 1500);
+            root.bar.showToast("󰑊", root.bar.tr("control.recording", "Recording"), root.bar.tr("toast.stopped", "Stopped"), "success", -1, 1500);
             return;
         }
 
         if (!captureActionEnabled("record")) {
             captureStatus = "Missing tool";
-            root.bar.showToast("󰑊", "Recording", captureStatus, "error", -1, 1600);
+            root.bar.showToast("󰑊", root.bar.tr("control.recording", "Recording"), captureStatus, "error", -1, 1600);
             return;
         }
 
@@ -331,13 +331,13 @@ Item {
         recording = true;
         recordingPath = path;
         captureStatus = "Recording";
-        root.bar.showToast("󰑊", "Recording", "Started", "info", -1, 1500);
+        root.bar.showToast("󰑊", root.bar.tr("control.recording", "Recording"), root.bar.tr("common.start", "Start"), "info", -1, 1500);
     }
 
     function pickColor() {
         if (!captureActionEnabled("color")) {
             captureStatus = "Missing tool";
-            root.bar.showToast("", "Color Picker", captureStatus, "error", -1, 1600);
+            root.bar.showToast("", root.bar.tr("capture.colorPicker", "Color picker"), captureStatus, "error", -1, 1600);
             return;
         }
         runCapture("hyprpicker -a", "Color copied", "");
@@ -354,7 +354,7 @@ Item {
         captureUtilityProc.command = ["sh", "-c", "printf '%s' " + shellQuote(root.bar.captureLastPath) + " | wl-copy"];
         captureUtilityProc.running = true;
         captureStatus = "Path copied";
-        root.bar.showToast("", "Capture", "Path copied", "success", -1, 1200);
+        root.bar.showToast("", root.bar.tr("capture.title", "Capture"), root.bar.tr("toast.pathCopied", "Path copied"), "success", -1, 1200);
     }
 
     function refreshWindows() {
@@ -419,7 +419,7 @@ Item {
 
     function runWindowCommand(command, status, closePanel) {
         windowStatus = status || "Running";
-        root.bar.showToast("󰖯", "Window", windowStatus, "info", -1, 1200);
+        root.bar.showToast("󰖯", root.bar.tr("control.windowTitle", "Window"), windowStatus, "info", -1, 1200);
         if (closePanel) root.bar.closeControlCenter();
         windowCommandProc.command = ["sh", "-c", command];
         windowCommandProc.running = true;
@@ -457,14 +457,14 @@ Item {
 
     function toggleScratchpad() {
         scratchStatus = "Toggled";
-        root.bar.showToast("󰹑", "Scratchpad", "Toggle special workspace", "info", -1, 1200);
+        root.bar.showToast("󰹑", root.bar.tr("control.scratchpad", "Scratchpad"), root.bar.tr("scratch.toggleSpecialWorkspace", "Toggle special workspace"), "info", -1, 1200);
         scratchCommandProc.command = ["hyprctl", "dispatch", "togglespecialworkspace", "scratch"];
         scratchCommandProc.running = true;
     }
 
     function moveActiveToScratchpad() {
         scratchStatus = "Moving active window";
-        root.bar.showToast("󰹑", "Scratchpad", scratchStatus, "info", -1, 1200);
+        root.bar.showToast("󰹑", root.bar.tr("control.scratchpad", "Scratchpad"), scratchStatus, "info", -1, 1200);
         scratchCommandProc.command = ["hyprctl", "dispatch", "movetoworkspacesilent", "special:scratch"];
         scratchCommandProc.running = true;
     }
@@ -472,7 +472,7 @@ Item {
     function moveScratchWindowToCurrent(window) {
         if (!window || !window.address) return;
         scratchStatus = "Moving window back";
-        root.bar.showToast("󰹑", "Scratchpad", scratchStatus, "info", -1, 1200);
+        root.bar.showToast("󰹑", root.bar.tr("control.scratchpad", "Scratchpad"), scratchStatus, "info", -1, 1200);
         scratchCommandProc.command = ["sh", "-c", "ws=$(hyprctl activeworkspace -j | jq -r '.id'); hyprctl dispatch movetoworkspacesilent \"$ws,address:" + window.address + "\""];
         scratchCommandProc.running = true;
     }
@@ -480,7 +480,7 @@ Item {
     function focusScratchWindow(window) {
         if (!window || !window.address) return;
         scratchStatus = "Focusing";
-        root.bar.showToast("󰹑", "Scratchpad", scratchStatus, "info", -1, 1000);
+        root.bar.showToast("󰹑", root.bar.tr("control.scratchpad", "Scratchpad"), scratchStatus, "info", -1, 1000);
         scratchCommandProc.command = ["hyprctl", "dispatch", "focuswindow", "address:" + window.address];
         scratchCommandProc.running = true;
     }
@@ -511,11 +511,11 @@ Item {
 
         if (action === "upgrade") {
             maintenanceStatus = "Opening updater";
-            root.bar.showToast("󰏖", "Maintenance", maintenanceStatus, "info", -1, 1300);
+            root.bar.showToast("󰏖", root.bar.tr("control.maintenance", "Maintenance"), maintenanceStatus, "info", -1, 1300);
             maintenanceCommandProc.command = ["sh", "-c", "term=${TERMINAL:-}; cmd='if command -v paru >/dev/null 2>&1; then paru -Syu; elif command -v yay >/dev/null 2>&1; then yay -Syu; else sudo pacman -Syu; fi; printf \"\\nPress enter to close...\"; read _'; if [ -n \"$term\" ]; then setsid -f $term -e sh -lc \"$cmd\"; elif command -v alacritty >/dev/null 2>&1; then setsid -f alacritty -e sh -lc \"$cmd\"; elif command -v kitty >/dev/null 2>&1; then setsid -f kitty sh -lc \"$cmd\"; elif command -v foot >/dev/null 2>&1; then setsid -f foot sh -lc \"$cmd\"; else exit 1; fi >/tmp/quickshell-maintenance.log 2>&1"];
         } else if (action === "clean") {
             maintenanceStatus = "Cleaning cache";
-            root.bar.showToast("󰏖", "Maintenance", maintenanceStatus, "info", -1, 1300);
+            root.bar.showToast("󰏖", root.bar.tr("control.maintenance", "Maintenance"), maintenanceStatus, "info", -1, 1300);
             maintenanceCommandProc.command = ["sh", "-c", "if command -v paccache >/dev/null 2>&1; then paccache -rk2; elif command -v paru >/dev/null 2>&1; then paru -Sc --noconfirm; elif command -v yay >/dev/null 2>&1; then yay -Sc --noconfirm; else exit 127; fi >/tmp/quickshell-maintenance.log 2>&1"];
         } else {
             maintenanceBusy = false;
@@ -592,7 +592,7 @@ Item {
         if (!item || !item.name || vpnBusy) return;
         vpnBusy = true;
         vpnStatus = item.active ? "Disconnecting " + item.name : "Connecting " + item.name;
-        root.bar.showToast("󰖂", "VPN", vpnStatus, "info", -1, 1400);
+        root.bar.showToast("󰖂", root.bar.tr("control.vpnTitle", "VPN"), vpnStatus, "info", -1, 1400);
         vpnCommandProc.command = ["nmcli", "connection", item.active ? "down" : "up", item.name];
         vpnCommandProc.running = true;
     }
@@ -640,7 +640,7 @@ Item {
         if (!item || !item.unit || servicesBusy) return;
         servicesBusy = true;
         servicesStatus = "Restarting " + item.unit;
-        root.bar.showToast("󰒋", "Services", servicesStatus, "info", -1, 1400);
+        root.bar.showToast("󰒋", root.bar.tr("control.servicesTitle", "Services"), servicesStatus, "info", -1, 1400);
         servicesCommandProc.command = ["systemctl", "--user", "restart", item.unit];
         servicesCommandProc.running = true;
     }
@@ -864,7 +864,7 @@ Item {
             }
             command += (command.length > 0 ? " || " : "") + cleanEnv + "gtk-launch " + shellQuote(item.action) + " >/tmp/quickshell-launcher.log 2>&1";
             launcherStatus = "Launching " + item.name;
-            root.bar.showToast("", "Launcher", item.name, "info", -1, 1400);
+            root.bar.showToast("", root.bar.tr("control.launcherTitle", "Launcher"), item.name, "info", -1, 1400);
             launcherCommandProc.command = ["sh", "-c", command];
             launcherCommandProc.running = true;
             return;
@@ -888,26 +888,26 @@ Item {
             var query = launcherQuery.trim();
             if (query.length === 0) {
                 launcherStatus = "Type a query";
-                root.bar.showToast("󰖟", "Web Search", launcherStatus, "warning", -1, 1400);
+                root.bar.showToast("󰖟", root.bar.tr("control.webSearch", "Web Search"), launcherStatus, "warning", -1, 1400);
                 return;
             }
             root.bar.closeControlCenter();
-            root.bar.showToast("󰖟", "Web Search", query, "info", -1, 1400);
+            root.bar.showToast("󰖟", root.bar.tr("control.webSearch", "Web Search"), query, "info", -1, 1400);
             launcherCommandProc.command = ["sh", "-c", "setsid -f xdg-open " + shellQuote("https://duckduckgo.com/?q=" + encodeURIComponent(query)) + " >/tmp/quickshell-launcher.log 2>&1"];
             launcherCommandProc.running = true;
         } else if (item.action === "files") {
             root.bar.closeControlCenter();
-            root.bar.showToast("", "Files", "Opening home", "info", -1, 1200);
+            root.bar.showToast("", root.bar.tr("control.files", "Files"), root.bar.tr("toast.openingHome", "Opening home"), "info", -1, 1200);
             launcherCommandProc.command = ["sh", "-c", "setsid -f xdg-open \"$HOME\" >/tmp/quickshell-launcher.log 2>&1"];
             launcherCommandProc.running = true;
         } else if (item.action === "terminal") {
             root.bar.closeControlCenter();
-            root.bar.showToast("", "Terminal", "Opening terminal", "info", -1, 1200);
+            root.bar.showToast("", root.bar.tr("control.terminal", "Terminal"), root.bar.tr("toast.openingTerminal", "Opening terminal"), "info", -1, 1200);
             launcherCommandProc.command = ["sh", "-c", "term=${TERMINAL:-}; if [ -n \"$term\" ]; then setsid -f $term; elif command -v alacritty >/dev/null 2>&1; then setsid -f alacritty; elif command -v kitty >/dev/null 2>&1; then setsid -f kitty; elif command -v foot >/dev/null 2>&1; then setsid -f foot; else exit 1; fi >/tmp/quickshell-launcher.log 2>&1"];
             launcherCommandProc.running = true;
         } else if (item.action === "reload") {
             root.bar.closeControlCenter();
-            root.bar.showToast("󰑓", "Quickshell", "Reloading", "info", -1, 1200);
+            root.bar.showToast("󰑓", root.bar.tr("control.quickshell", "Quickshell"), root.bar.tr("toast.reloading", "Reloading"), "info", -1, 1200);
             launcherCommandProc.command = ["sh", "-c", "qs kill -p /home/sado/.config/quickshell && qs -p /home/sado/.config/quickshell -d >/tmp/quickshell-launcher.log 2>&1"];
             launcherCommandProc.running = true;
         } else if (item.action === "settings") {
@@ -953,7 +953,7 @@ Item {
         var text = String(item.commandText || "").trim();
         if (text.length === 0) {
             launcherStatus = "Empty command";
-            root.bar.showToast("", "Launcher", launcherStatus, "warning", -1, 1300);
+            root.bar.showToast("", root.bar.tr("control.launcherTitle", "Launcher"), launcherStatus, "warning", -1, 1300);
             return;
         }
 
@@ -962,7 +962,7 @@ Item {
             launcherStatus = "Calculating";
             var py = "import math; expr=" + JSON.stringify(text) + "; allowed={k:getattr(math,k) for k in dir(math) if not k.startswith('_')}; allowed.update({'abs':abs,'round':round,'min':min,'max':max,'pow':pow}); print(eval(expr, {'__builtins__':{}}, allowed))";
             launcherCommandProc.command = ["sh", "-c", "python3 -c " + shellQuote(py) + " >/tmp/quickshell-launcher.log 2>&1 && wl-copy < /tmp/quickshell-launcher.log"];
-            root.bar.showToast("󰃬", "Calculator", text, "info", -1, 1300);
+            root.bar.showToast("󰃬", root.bar.tr("control.calculator", "Calculator"), text, "info", -1, 1300);
             launcherCommandProc.running = true;
             return;
         }
@@ -970,7 +970,7 @@ Item {
         if (item.action === "webQuery") {
             launcherStatus = "Searching";
             launcherCommandProc.command = ["sh", "-c", "setsid -f xdg-open " + shellQuote("https://duckduckgo.com/?q=" + encodeURIComponent(text)) + " >/tmp/quickshell-launcher.log 2>&1"];
-            root.bar.showToast("󰖟", "Web Search", text, "info", -1, 1300);
+            root.bar.showToast("󰖟", root.bar.tr("control.webSearch", "Web Search"), text, "info", -1, 1300);
             launcherCommandProc.running = true;
             return;
         }
@@ -979,7 +979,7 @@ Item {
             launcherStatus = "Opening URL";
             var url = text.match(/^https?:\/\//) ? text : "https://" + text;
             launcherCommandProc.command = ["sh", "-c", "setsid -f xdg-open " + shellQuote(url) + " >/tmp/quickshell-launcher.log 2>&1"];
-            root.bar.showToast("󰖟", "Open URL", url, "info", -1, 1300);
+            root.bar.showToast("󰖟", root.bar.tr("control.openUrl", "Open URL"), url, "info", -1, 1300);
             launcherCommandProc.running = true;
             return;
         }
@@ -987,7 +987,7 @@ Item {
         if (item.action === "hyprDispatch") {
             launcherStatus = "Dispatching";
             launcherCommandProc.command = ["sh", "-c", "hyprctl dispatch " + shellQuote(text) + " >/tmp/quickshell-launcher.log 2>&1"];
-            root.bar.showToast("󰘳", "Hyprland", text, "info", -1, 1300);
+            root.bar.showToast("󰘳", root.bar.tr("control.hyprland", "Hyprland"), text, "info", -1, 1300);
             launcherCommandProc.running = true;
         }
     }
@@ -1651,7 +1651,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Refresh"
+                                    text: root.bar.tr("common.refresh", "Refresh")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -1674,8 +1674,8 @@ Item {
 
                             Repeater {
                                 model: [
-                                    { icon: "󰹑", label: "Toggle pad", sub: "Show / hide", action: "toggle" },
-                                    { icon: "󰍉", label: "Send active", sub: "Move focused window", action: "send" }
+                                    { icon: "󰹑", label: root.bar.tr("scratch.togglePad", "Toggle pad"), sub: root.bar.tr("scratch.showHide", "Show / hide"), action: "toggle" },
+                                    { icon: "󰍉", label: root.bar.tr("scratch.sendActive", "Send active"), sub: root.bar.tr("scratch.moveFocused", "Move focused window"), action: "send" }
                                 ]
 
                                 Rectangle {
@@ -1738,7 +1738,7 @@ Item {
                         Text {
                             width: parent.width
                             visible: root.scratchWindowItems().length === 0
-                            text: "No scratchpad windows"
+                            text: root.bar.tr("scratch.empty", "No scratchpad windows")
                             color: root.bar.mutedTextColor
                             font.family: root.bar.barFont
                             font.pixelSize: 13
@@ -2688,7 +2688,7 @@ Item {
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: "Refresh"
+                                    text: root.bar.tr("common.refresh", "Refresh")
                                     color: root.bar.textColor
                                     font.family: root.bar.barFont
                                     font.pixelSize: 11
@@ -3421,7 +3421,7 @@ Item {
             if (exitCode !== 0) {
                 root.clipboardItems = [];
                 root.clipboardStatus = "cliphist unavailable";
-                root.bar.showToast("", "Clipboard", root.clipboardStatus, "error", -1, 1600);
+                root.bar.showToast("", root.bar.tr("quick.clipboard", "Clipboard"), root.clipboardStatus, "error", -1, 1600);
             }
         }
     }
@@ -3431,7 +3431,7 @@ Item {
         command: ["sh", "-c", "true"]
         onExited: function(exitCode) {
             clipboardStatus = exitCode === 0 ? "Copied" : "Copy failed";
-            root.bar.showToast("", "Clipboard", clipboardStatus, exitCode === 0 ? "success" : "error", -1, 1400);
+            root.bar.showToast("", root.bar.tr("quick.clipboard", "Clipboard"), clipboardStatus, exitCode === 0 ? "success" : "error", -1, 1400);
         }
     }
 
@@ -3441,7 +3441,7 @@ Item {
         onExited: function(exitCode) {
             root.clipboardItems = [];
             root.clipboardStatus = exitCode === 0 ? "Cleared" : "cliphist unavailable";
-            root.bar.showToast("", "Clipboard", root.clipboardStatus, exitCode === 0 ? "success" : "error", -1, 1400);
+            root.bar.showToast("", root.bar.tr("quick.clipboard", "Clipboard"), root.clipboardStatus, exitCode === 0 ? "success" : "error", -1, 1400);
         }
     }
 
@@ -3475,11 +3475,11 @@ Item {
             root.recording = false;
             if (exitCode !== 0 && root.captureStatus === "Recording") {
                 root.captureStatus = "Recording failed";
-                root.bar.showToast("󰑊", "Recording", root.captureStatus, "error", -1, 1700);
+                root.bar.showToast("󰑊", root.bar.tr("control.recording", "Recording"), root.captureStatus, "error", -1, 1700);
             } else if (root.recordingPath.length > 0) {
                 root.bar.captureLastPath = root.recordingPath;
                 root.bar.persistSettings();
-                root.bar.showToast("󰑊", "Recording", root.recordingPath.replace(/^.*\//, ""), "success", -1, 1700);
+                root.bar.showToast("󰑊", root.bar.tr("control.recording", "Recording"), root.recordingPath.replace(/^.*\//, ""), "success", -1, 1700);
             }
         }
     }
@@ -3512,9 +3512,9 @@ Item {
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 root.windowStatus = "Window action failed";
-                root.bar.showToast("󰖯", "Window", root.windowStatus, "error", -1, 1600);
+                root.bar.showToast("󰖯", root.bar.tr("control.windowTitle", "Window"), root.windowStatus, "error", -1, 1600);
             } else {
-                root.bar.showToast("󰖯", "Window", root.windowStatus, "success", -1, 1300);
+                root.bar.showToast("󰖯", root.bar.tr("control.windowTitle", "Window"), root.windowStatus, "success", -1, 1300);
             }
             refreshWindowsTimer.restart();
         }
@@ -3525,7 +3525,7 @@ Item {
         command: ["sh", "-c", "true"]
         onExited: function(exitCode) {
             root.scratchStatus = exitCode === 0 ? "Done" : "Scratch action failed";
-            root.bar.showToast("󰹑", "Scratchpad", root.scratchStatus, exitCode === 0 ? "success" : "error", -1, 1300);
+            root.bar.showToast("󰹑", root.bar.tr("control.scratchpad", "Scratchpad"), root.scratchStatus, exitCode === 0 ? "success" : "error", -1, 1300);
             refreshWindowsTimer.restart();
         }
     }
@@ -3567,7 +3567,7 @@ Item {
             if (exitCode !== 0) {
                 root.vpnItems = [];
                 root.vpnStatus = "VPN check failed";
-                root.bar.showToast("󰖂", "VPN", root.vpnStatus, "error", -1, 1600);
+                root.bar.showToast("󰖂", root.bar.tr("control.vpnTitle", "VPN"), root.vpnStatus, "error", -1, 1600);
             }
         }
     }
@@ -3578,7 +3578,7 @@ Item {
         onExited: function(exitCode) {
             root.vpnBusy = false;
             root.vpnStatus = exitCode === 0 ? "Command sent" : "VPN action failed";
-            root.bar.showToast("󰖂", "VPN", root.vpnStatus, exitCode === 0 ? "success" : "error", -1, 1500);
+            root.bar.showToast("󰖂", root.bar.tr("control.vpnTitle", "VPN"), root.vpnStatus, exitCode === 0 ? "success" : "error", -1, 1500);
             vpnRefreshDelay.restart();
         }
     }
@@ -3603,9 +3603,9 @@ Item {
             root.maintenanceBusy = false;
             if (exitCode !== 0) {
                 root.maintenanceStatus = "Check failed";
-                root.bar.showToast("󰏖", "Maintenance", root.maintenanceStatus, "error", -1, 1600);
+                root.bar.showToast("󰏖", root.bar.tr("control.maintenance", "Maintenance"), root.maintenanceStatus, "error", -1, 1600);
             } else {
-                root.bar.showToast("󰏖", "Maintenance", root.maintenanceUpdates + " pacman / " + root.maintenanceAurUpdates + " AUR", "success", -1, 1400);
+                root.bar.showToast("󰏖", root.bar.tr("control.maintenance", "Maintenance"), root.maintenanceUpdates + " pacman / " + root.maintenanceAurUpdates + " AUR", "success", -1, 1400);
             }
         }
     }
@@ -3616,7 +3616,7 @@ Item {
         onExited: function(exitCode) {
             root.maintenanceBusy = false;
             root.maintenanceStatus = exitCode === 0 ? "Command sent" : "Command failed";
-            root.bar.showToast("󰏖", "Maintenance", root.maintenanceStatus, exitCode === 0 ? "success" : "error", -1, 1500);
+            root.bar.showToast("󰏖", root.bar.tr("control.maintenance", "Maintenance"), root.maintenanceStatus, exitCode === 0 ? "success" : "error", -1, 1500);
             maintenanceRefreshDelay.restart();
         }
     }
@@ -3642,7 +3642,7 @@ Item {
             if (exitCode !== 0) {
                 root.serviceItems = [];
                 root.servicesStatus = "Service check failed";
-                root.bar.showToast("󰒋", "Services", root.servicesStatus, "error", -1, 1600);
+                root.bar.showToast("󰒋", root.bar.tr("control.servicesTitle", "Services"), root.servicesStatus, "error", -1, 1600);
             }
         }
     }
@@ -3653,7 +3653,7 @@ Item {
         onExited: function(exitCode) {
             root.servicesBusy = false;
             root.servicesStatus = exitCode === 0 ? "Restart sent" : "Restart failed";
-            root.bar.showToast("󰒋", "Services", root.servicesStatus, exitCode === 0 ? "success" : "error", -1, 1500);
+            root.bar.showToast("󰒋", root.bar.tr("control.servicesTitle", "Services"), root.servicesStatus, exitCode === 0 ? "success" : "error", -1, 1500);
             servicesRefreshDelay.restart();
         }
     }
@@ -3678,7 +3678,7 @@ Item {
             if (exitCode !== 0) {
                 root.keybindItems = [];
                 root.keybindsStatus = "Could not read binds";
-                root.bar.showToast("󰌌", "Keybinds", root.keybindsStatus, "error", -1, 1600);
+                root.bar.showToast("󰌌", root.bar.tr("control.keybindsTitle", "Keybinds"), root.keybindsStatus, "error", -1, 1600);
             }
         }
     }
@@ -3696,7 +3696,7 @@ Item {
             if (exitCode !== 0) {
                 root.launcherApps = [];
                 root.launcherStatus = "Could not read apps";
-                root.bar.showToast("", "Launcher", root.launcherStatus, "error", -1, 1600);
+                root.bar.showToast("", root.bar.tr("control.launcherTitle", "Launcher"), root.launcherStatus, "error", -1, 1600);
             }
         }
     }
@@ -3707,9 +3707,9 @@ Item {
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 root.launcherStatus = "Launch failed";
-                root.bar.showToast("", "Launcher", root.launcherStatus, "error", -1, 1600);
+                root.bar.showToast("", root.bar.tr("control.launcherTitle", "Launcher"), root.launcherStatus, "error", -1, 1600);
             } else {
-                root.bar.showToast("", "Launcher", "Command sent", "success", -1, 1100);
+                root.bar.showToast("", root.bar.tr("control.launcherTitle", "Launcher"), root.bar.tr("toast.commandSent", "Command sent"), "success", -1, 1100);
             }
         }
     }
