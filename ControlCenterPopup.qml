@@ -274,10 +274,9 @@ Item {
     function runCapture(command, status, path) {
         captureStatus = status || "Running";
         capturePendingPath = path || "";
-        if (path) root.bar.captureLastPath = path;
         root.bar.closeControlCenter();
         root.bar.showToast("", "Capture", status || "Running", "info", -1, 1200);
-        captureProc.command = ["sh", "-c", "sleep 0.15; " + command];
+        captureProc.command = ["sh", "-c", "sleep " + (Math.max(root.bar.popupAnimationMs, 220) / 1000).toFixed(2) + "; " + command + " 2>/tmp/quickshell-capture.log"];
         captureProc.running = true;
     }
 
@@ -288,7 +287,7 @@ Item {
             root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
             return;
         }
-        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && grim " + shellQuote(path) + " && wl-copy < " + shellQuote(path), "Fullscreen saved", path);
+        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && grim " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Fullscreen saved", path);
     }
 
     function captureRegion() {
@@ -298,7 +297,7 @@ Item {
             root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
             return;
         }
-        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && area=$(slurp) && [ -n \"$area\" ] && grim -g \"$area\" " + shellQuote(path) + " && wl-copy < " + shellQuote(path), "Region saved", path);
+        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && area=$(slurp) && [ -n \"$area\" ] && grim -g \"$area\" " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Region saved", path);
     }
 
     function captureWindow() {
@@ -308,7 +307,7 @@ Item {
             root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
             return;
         }
-        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && geom=$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"') && [ -n \"$geom\" ] && grim -g \"$geom\" " + shellQuote(path) + " && wl-copy < " + shellQuote(path), "Window saved", path);
+        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && geom=$(hyprctl activewindow -j | jq -r '\"\\(.at[0]),\\(.at[1]) \\(.size[0])x\\(.size[1])\"') && [ -n \"$geom\" ] && [ \"$geom\" != \"null,null nullxnull\" ] && grim -g \"$geom\" " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Window saved", path);
     }
 
     function toggleRecording() {
@@ -3451,8 +3450,9 @@ Item {
         onExited: function(exitCode) {
             if (exitCode !== 0) {
                 root.captureStatus = "Capture failed";
-                root.bar.showToast("", "Capture", root.captureStatus, "error", -1, 1700);
+                root.bar.showToast("", "Capture", root.captureStatus + " · /tmp/quickshell-capture.log", "error", -1, 2200);
             } else if (root.capturePendingPath.length > 0) {
+                root.bar.captureLastPath = root.capturePendingPath;
                 root.bar.persistSettings();
                 root.bar.showToast("", "Capture", root.capturePendingPath.replace(/^.*\//, ""), "success", -1, 1700);
             } else {
