@@ -156,6 +156,7 @@ PanelWindow {
     property string captureLastPath: ""
     property string captureStatus: "Ready"
     property string capturePendingPath: ""
+    property string captureSelectedArea: ""
     property bool controlCenterCaptureBusy: false
     property var notificationHistory: []
     property int unreadNotifications: 0
@@ -721,6 +722,16 @@ PanelWindow {
         showToast("", "Capture", captureStatus, "info", -1, 1200);
         captureProc.command = ["sh", "-c", "sleep " + (Math.max(popupAnimationMs + 140, 360) / 1000).toFixed(2) + "; " + command + " 2>/tmp/quickshell-capture.log"];
         captureProc.running = true;
+    }
+
+    function runRegionCapture(path) {
+        captureStatus = "Selecting region";
+        capturePendingPath = path || "";
+        captureSelectedArea = "";
+        closeControlCenter();
+        showToast("", "Capture", captureStatus, "info", -1, 1200);
+        captureRegionProc.command = ["sh", "-c", "sleep " + (Math.max(popupAnimationMs + 160, 420) / 1000).toFixed(2) + "; slurp 2>/tmp/quickshell-capture.log"];
+        captureRegionProc.running = true;
     }
 
     function showToast(icon, title, message, level, progress, durationMs) {
@@ -1607,6 +1618,28 @@ PanelWindow {
                 showToast("", "Capture", captureStatus, "success", -1, 1400);
             }
             capturePendingPath = "";
+        }
+    }
+
+    Process {
+        id: captureRegionProc
+        command: ["sh", "-c", "true"]
+
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: captureSelectedArea = String(text || "").trim();
+        }
+
+        onExited: function(exitCode) {
+            if (exitCode !== 0 || captureSelectedArea.length === 0) {
+                captureStatus = "Region cancelled";
+                showToast("", "Capture", captureStatus + " · /tmp/quickshell-capture.log", "warning", -1, 1800);
+                capturePendingPath = "";
+                return;
+            }
+
+            var path = capturePendingPath;
+            runCaptureCommand("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && grim -g " + shellQuote(captureSelectedArea) + " " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Region saved", path);
         }
     }
 

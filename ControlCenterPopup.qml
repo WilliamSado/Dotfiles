@@ -18,6 +18,7 @@ Item {
     property var captureTools: ({})
     property var windowItems: []
     property string windowFilter: "all"
+    property string windowQuery: ""
     property int activeWorkspaceId: -1
     property string windowStatus: "Ready"
     property string scratchStatus: "Ready"
@@ -294,7 +295,7 @@ Item {
             root.bar.showToast("", "Capture", captureStatus, "error", -1, 1600);
             return;
         }
-        runCapture("mkdir -p " + shellQuote("/home/sado/Pictures/Screenshots") + " && area=$(slurp) && [ -n \"$area\" ] && grim -g \"$area\" " + shellQuote(path) + " && test -s " + shellQuote(path) + " && wl-copy --type image/png < " + shellQuote(path), "Region saved", path);
+        root.bar.runRegionCapture(path);
     }
 
     function captureWindow() {
@@ -3438,25 +3439,6 @@ Item {
             root.clipboardItems = [];
             root.clipboardStatus = exitCode === 0 ? "Cleared" : "cliphist unavailable";
             root.bar.showToast("", "Clipboard", root.clipboardStatus, exitCode === 0 ? "success" : "error", -1, 1400);
-        }
-    }
-
-    Process {
-        id: captureProc
-        command: ["sh", "-c", "true"]
-        onExited: function(exitCode) {
-            if (exitCode !== 0) {
-                root.captureStatus = "Capture failed";
-                root.bar.showToast("", "Capture", root.captureStatus + " · /tmp/quickshell-capture.log", "error", -1, 2200);
-            } else if (root.capturePendingPath.length > 0) {
-                root.bar.captureLastPath = root.capturePendingPath;
-                root.bar.persistSettings();
-                root.bar.showToast("", "Capture", root.capturePendingPath.replace(/^.*\//, ""), "success", -1, 1700);
-            } else {
-                root.bar.showToast("", "Capture", root.captureStatus, "success", -1, 1400);
-            }
-            root.capturePendingPath = "";
-            root.bar.controlCenterCaptureBusy = false;
         }
     }
 
