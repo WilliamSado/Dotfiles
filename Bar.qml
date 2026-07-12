@@ -3136,53 +3136,91 @@ PanelWindow {
                     horizontalAlignment: Text.AlignHCenter
                 }
 
-                Repeater {
-                    model: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled ? Bluetooth.defaultAdapter.devices.values : []
+                Flickable {
+                    id: bluetoothDeviceFlick
+                    width: parent.width
+                    height: Math.min(bluetoothDeviceList.implicitHeight, 5 * 38)
+                    contentWidth: width
+                    contentHeight: bluetoothDeviceList.implicitHeight
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    visible: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled && Bluetooth.defaultAdapter.devices.values.length > 0
+
+                    WheelHandler {
+                        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                        onWheel: function(event) {
+                            bluetoothDeviceFlick.contentY = Math.max(0, Math.min(
+                                bluetoothDeviceFlick.contentHeight - bluetoothDeviceFlick.height,
+                                bluetoothDeviceFlick.contentY - event.angleDelta.y / 2
+                            ));
+                            event.accepted = true;
+                        }
+                    }
 
                     Rectangle {
-                        width: bluetoothPopupColumn.width
-                        height: 38
-                        radius: 12
-                        color: deviceMouse.containsMouse ? "#44282828" : "transparent"
+                        width: 3
+                        radius: 2
+                        anchors.right: parent.right
+                        anchors.rightMargin: 1
+                        y: bluetoothDeviceFlick.visibleArea.yPosition * bluetoothDeviceFlick.height
+                        height: Math.max(18, bluetoothDeviceFlick.visibleArea.heightRatio * bluetoothDeviceFlick.height)
+                        color: mutedTextColor
+                        opacity: bluetoothDeviceFlick.contentHeight > bluetoothDeviceFlick.height ? 0.45 : 0
+                    }
 
-                        RowLayout {
-                            anchors.fill: parent
-                            anchors.leftMargin: 10
-                            anchors.rightMargin: 10
-                            spacing: 8
+                    Column {
+                        id: bluetoothDeviceList
+                        width: bluetoothDeviceFlick.width
 
-                            Text {
-                                text: modelData.connected ? "󰂱" : "󰂯"
-                                color: modelData.connected ? bluetoothTextColor : mutedTextColor
-                                font.family: iconFont
-                                font.pixelSize: 16
-                                Layout.alignment: Qt.AlignVCenter
+                        Repeater {
+                            model: Bluetooth.defaultAdapter && Bluetooth.defaultAdapter.enabled ? Bluetooth.defaultAdapter.devices.values : []
+
+                            Rectangle {
+                                width: bluetoothDeviceList.width
+                                height: 38
+                                radius: 12
+                                color: deviceMouse.containsMouse ? "#44282828" : "transparent"
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 10
+                                    anchors.rightMargin: 10
+                                    spacing: 8
+
+                                    Text {
+                                        text: modelData.connected ? "󰂱" : "󰂯"
+                                        color: modelData.connected ? bluetoothTextColor : mutedTextColor
+                                        font.family: iconFont
+                                        font.pixelSize: 16
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Text {
+                                        text: bluetoothDeviceName(modelData)
+                                        color: textColor
+                                        font.family: barFont
+                                        font.pixelSize: 14
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+
+                                    Text {
+                                        text: bluetoothDeviceStatus(modelData)
+                                        color: modelData.connected ? bluetoothTextColor : mutedTextColor
+                                        font.family: barFont
+                                        font.pixelSize: 12
+                                        Layout.alignment: Qt.AlignVCenter
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: deviceMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: toggleBluetoothDevice(modelData)
+                                }
                             }
-
-                            Text {
-                                text: bluetoothDeviceName(modelData)
-                                color: textColor
-                                font.family: barFont
-                                font.pixelSize: 14
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-
-                            Text {
-                                text: bluetoothDeviceStatus(modelData)
-                                color: modelData.connected ? bluetoothTextColor : mutedTextColor
-                                font.family: barFont
-                                font.pixelSize: 12
-                                Layout.alignment: Qt.AlignVCenter
-                            }
-                        }
-
-                        MouseArea {
-                            id: deviceMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: toggleBluetoothDevice(modelData)
                         }
                     }
                 }
