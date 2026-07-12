@@ -4,6 +4,8 @@ set -Eeuo pipefail
 REPO_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_HOME="${XDG_CONFIG_HOME:-"$HOME/.config"}"
 BACKUP_ROOT="${BACKUP_ROOT:-"$HOME/.config/dotfiles-backup"}"
+WALLPAPER_SOURCE_DIR="${REPO_DIR}/wallpapers"
+WALLPAPER_TARGET_DIR="${HOME}/Pictures/wallpapers"
 
 CONFIGS=(
   "alacritty"
@@ -103,7 +105,6 @@ Usage: ./setup.sh [command]
 
 Commands:
   install    Create user dirs and link dotfiles into ${CONFIG_HOME} (default)
-  migrate    Replace legacy /home/sado paths with /home/<current-user>
   status     Show current link status
   check      Check Arch/runtime dependencies
   packages   Print Arch package install commands
@@ -159,39 +160,27 @@ replace_in_file() {
   escaped_to="${escaped_to//\//\\/}"
 
   sed -i "s/${escaped_from}/${escaped_to}/g" "$file"
-  printf '%s\n' "$file"
 }
 
 migrate_legacy_home_paths() {
-  local user target_home changed_file changed=0
+  local user target_home
   user="$(current_user_name)"
   target_home="$(current_user_home "$user")"
 
-  log "migrating legacy /home/sado paths to $target_home"
-
-  while IFS= read -r changed_file; do
-    changed=1
-    log "updated $changed_file"
-  done < <(
-    find \
-      "${REPO_DIR}/hypr" \
-      "${REPO_DIR}/quickshell" \
-      "${REPO_DIR}/alacritty" \
-      -type f \
-      -exec sh -c '
-        for file do
-          case "$file" in
-            *.qml|*.conf|*.toml|*.json|*.sh) printf "%s\n" "$file" ;;
-          esac
-        done
-      ' sh {} + | while IFS= read -r file; do
-        replace_in_file "$file" "/home/sado" "$target_home"
+  find \
+    "${REPO_DIR}/hypr" \
+    "${REPO_DIR}/quickshell" \
+    "${REPO_DIR}/alacritty" \
+    -type f \
+    -exec sh -c '
+      for file do
+        case "$file" in
+          *.qml|*.conf|*.toml|*.json|*.sh) printf "%s\n" "$file" ;;
+        esac
       done
-  )
-
-  if (( ! changed )); then
-    log "no legacy /home/sado paths found"
-  fi
+    ' sh {} + | while IFS= read -r file; do
+      replace_in_file "$file" "/home/sado" "$target_home"
+    done
 }
 
 join_words() {
@@ -266,15 +255,35 @@ link_config() {
   log "linked $target -> $source"
 }
 
+install_wallpapers() {
+  [[ -d "$WALLPAPER_SOURCE_DIR" ]] || return 0
+
+  local copied=0 file target
+  while IFS= read -r file; do
+    target="${WALLPAPER_TARGET_DIR}/$(basename "$file")"
+    if [[ ! -e "$target" ]]; then
+      cp "$file" "$target"
+      copied=$((copied + 1))
+    fi
+  done < <(
+    find "$WALLPAPER_SOURCE_DIR" -maxdepth 1 -type f \
+      \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.avif' \) \
+      -print
+  )
+
+  log "installed $copied wallpapers to $WALLPAPER_TARGET_DIR"
+}
+
 install_configs() {
   log "installing configs from $REPO_DIR"
   migrate_legacy_home_paths
 
   mkdir -p \
     "$HOME/Pictures/Screenshots" \
-    "$HOME/Pictures/wallpapers" \
+    "$WALLPAPER_TARGET_DIR" \
     "$HOME/Videos/Recordings"
   log "ensured screenshots, wallpapers, and recordings directories exist"
+  install_wallpapers
 
   for name in "${CONFIGS[@]}"; do
     link_config "$name"
@@ -283,7 +292,6 @@ install_configs() {
   chmod +x "${REPO_DIR}/quickshell/scripts/"*.sh
   log "made quickshell helper scripts executable"
 
-  warn "wallpaper files are not bundled; adjust wallpaper paths after install if the referenced files do not exist."
   log "done"
 }
 
